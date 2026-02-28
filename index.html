@@ -1029,7 +1029,7 @@
             }, 3000);
         }
 
-        // Native Share Function
+        // Optimized Native Share Function
         async function shareImage(e) {
             const itemCount = canvasBoard.querySelectorAll('.canvas-item:not(.teacher-stamp-container)').length;
             if (itemCount === 0) {
@@ -1041,59 +1041,58 @@
             const btn = e && e.target ? e.target.closest('button') : document.getElementById('export-btn');
             const originalHTML = btn ? btn.innerHTML : '';
             if (btn) {
-                btn.innerHTML = '⏳ Formatting...';
+                btn.innerHTML = '⏳ Processing...';
                 btn.disabled = true;
             }
 
+            // Hide delete buttons for the capture
             const deletes = document.querySelectorAll('.delete-btn');
             deletes.forEach(d => d.style.display = 'none');
 
             const captureArea = document.getElementById('capture-area');
 
             try {
-                // Ensure layout is stable before capture
-                await new Promise(r => setTimeout(r, 200));
+                // Short delay to ensure delete buttons are hidden
+                await new Promise(r => setTimeout(r, 100));
 
                 const canvas = await html2canvas(captureArea, {
-                    scale: 2, // High resolution
-                    backgroundColor: '#166534', // Force green background fallback
+                    scale: 2,
+                    backgroundColor: '#166534',
                     useCORS: true,
                     logging: false,
                     windowWidth: captureArea.scrollWidth,
                     windowHeight: captureArea.scrollHeight
                 });
 
-                canvas.toBlob(async (blob) => {
-                    const file = new File([blob], 'NNPS_Vibe.png', { type: 'image/png' });
+                // Convert to Blob and File wrapper
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                const file = new File([blob], 'NNPS_Vibe.png', { type: 'image/png' });
 
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                        try {
-                            btn.innerHTML = '📱 Opening WhatsApp...';
-                            await navigator.share({
-                                files: [file],
-                                title: 'My NNPS Vibe',
-                                text: 'Lmaoo look at my primary school diagnosis 😭 Click the link to check yours!'
-                            });
-                            showToast("Shared successfully!");
-                        } catch (error) {
-                            if (error.name !== 'AbortError') {
-                                fallbackDownload(canvas);
-                            }
-                        }
-                    } else {
-                        fallbackDownload(canvas);
-                    }
-                    deletes.forEach(d => d.style.display = 'flex');
-                    if (btn) {
-                        btn.innerHTML = originalHTML;
-                        btn.disabled = false;
-                    }
-                }, 'image/png');
+                // Restore UI immediately
+                deletes.forEach(d => d.style.display = '');
+                if (btn) {
+                    btn.innerHTML = originalHTML;
+                    btn.disabled = false;
+                }
+
+                // Trigger Share Sheet
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    showToast("Opening WhatsApp/Share...");
+                    await navigator.share({
+                        files: [file],
+                        title: 'My NNPS Vibe Checks Out',
+                        text: 'Lmaoo look at my official primary school diagnosis 😭 Nigerian teachers were something else!'
+                    });
+                } else {
+                    // Fallback for Desktop/Unsupported browsers
+                    showToast("Share sheet not supported. Downloading instead!");
+                    fallbackDownload(canvas);
+                }
 
             } catch (err) {
                 console.error("Export failed:", err);
-                showToast("Couldn't process image. Try again!");
-                deletes.forEach(d => d.style.display = 'flex');
+                showToast("Share failed. Try taking a screenshot!");
+                deletes.forEach(d => d.style.display = '');
                 if (btn) {
                     btn.innerHTML = originalHTML;
                     btn.disabled = false;
