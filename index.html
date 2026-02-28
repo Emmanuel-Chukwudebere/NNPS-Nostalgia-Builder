@@ -750,7 +750,7 @@
         }
 
         // --- 5. Intelligent Vibe Calculation ---
-        window.startVibeAnalysis = function () {
+        function startVibeAnalysis() {
             const itemCount = selectedItems.length;
             if (itemCount < 3) {
                 showToast("Add at least 3 items for a proper Vibe Check!");
@@ -767,13 +767,13 @@
             setTimeout(() => modal.classList.add('active'), 10);
         }
 
-        window.closeQuizModal = function () {
+        function closeQuizModal() {
             const modal = document.getElementById('quiz-modal');
             modal.classList.remove('active');
             setTimeout(() => modal.style.display = 'none', 300);
         }
 
-        window.submitQuizAndAnalyze = function () {
+        function submitQuizAndAnalyze() {
             const seat = document.getElementById('user-seat').value;
             const memory = document.getElementById('user-memory').value.trim();
 
@@ -906,7 +906,7 @@
             return dnaString.toUpperCase().replace(/,/g, ' • ').replace(/AND/g, '•');
         }
 
-        window.closePersonaOverlay = function () {
+        function closePersonaOverlay() {
             document.getElementById('persona-wrapper').classList.remove('active');
         }
 
