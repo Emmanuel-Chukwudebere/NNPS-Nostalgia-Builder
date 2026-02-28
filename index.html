@@ -22,70 +22,176 @@
             overscroll-behavior-y: contain;
         }
 
-        .chalkboard {
+        /* * Simplified for html2canvas compatibility 
+         * Removed complex inset shadows that cause rendering glitches
+         */
+        .capture-container {
             background-color: #166534;
             /* Emerald 800 */
-            background-image:
-                radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-                radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-            background-size: 20px 20px;
-            background-position: 0 0, 10px 10px;
-            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.6);
-        }
-
-        .wood-frame {
-            border: 16px solid #5a3219;
+            border: 12px solid #5a3219;
+            /* Solid Wood Brown */
             border-radius: 12px;
-            box-shadow: inset 0 0 0 4px #3e1f0b, 0 10px 25px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
         }
 
         .chalk-text {
             font-family: 'Caveat', cursive;
             color: rgba(255, 255, 255, 0.9);
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
 
-        /* The Persona Result Banner */
+        /* * FLEXBOX OVERLAY: This fixes the clipping completely. 
+         * No more top/left 50% translates. 
+         */
+        .persona-wrapper {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            pointer-events: none;
+            z-index: 999;
+            opacity: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            transition: opacity 0.4s ease-in-out;
+        }
+
+        .persona-wrapper.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
         .persona-banner {
             font-family: 'Russo One', sans-serif;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.5);
-            width: 90%;
-            text-align: center;
-            background: rgba(0, 0, 0, 0.85);
+            width: 100%;
+            max-width: 450px;
+            background: rgba(15, 23, 42, 0.95);
+            /* Very dark slate */
             border: 4px dashed #fbbf24;
-            padding: 20px;
+            padding: 32px 24px;
             border-radius: 12px;
             color: white;
-            z-index: 100;
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+            transform: scale(0.9) rotate(-2deg);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            /* Ensure text wraps safely */
+            word-wrap: break-word;
+            white-space: normal;
         }
 
-        .persona-banner.active {
-            transform: translate(-50%, -50%) scale(1) rotate(-2deg);
-            opacity: 1;
+        .persona-wrapper.active .persona-banner {
+            transform: scale(1) rotate(-2deg);
+        }
+
+        .persona-name {
+            color: #f87171;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 4px;
         }
 
         .persona-title {
             color: #fbbf24;
-            /* Amber 400 */
-            font-size: 2rem;
+            font-size: 1.5rem;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             line-height: 1.1;
-            margin-bottom: 8px;
-            text-shadow: 2px 2px 0px #b45309;
+            margin-bottom: 6px;
+            text-shadow: 2px 2px 0px #92400e;
         }
 
-        .persona-desc {
+        .vibe-dna {
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 1rem;
-            color: #e5e7eb;
+            font-size: 0.75rem;
+            color: #6ee7b7;
+            /* Emerald 300 */
+            background: rgba(5, 150, 105, 0.2);
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        .roast-box {
+            background: rgba(220, 38, 38, 0.15);
+            border: 1px solid #dc2626;
+            border-radius: 8px;
+            padding: 12px 10px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.9rem;
+            color: #fca5a5;
+            font-style: italic;
+            line-height: 1.3;
+        }
+
+        .roast-header {
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            color: #ef4444;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+            font-style: normal;
+        }
+
+        /* Desktop specific scaling */
+        @media (min-width: 768px) {
+            .persona-banner {
+                padding: 24px 20px;
+            }
+
+            .persona-title {
+                font-size: 2rem;
+            }
+
+            .roast-box {
+                padding: 14px 12px;
+                font-size: 1rem;
+            }
+        }
+
+        /* Processing/Scanning Animation Overlay */
+        .scan-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(22, 101, 52, 0.85);
+            /* Emerald tint */
+            backdrop-filter: blur(4px);
+            z-index: 90;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fbbf24;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .teacher-stamp {
@@ -107,13 +213,13 @@
             cursor: grab;
             user-select: none;
             touch-action: none;
-            filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.4));
-            transition: transform 0.1s;
+            filter: drop-shadow(2px 5px 6px rgba(0, 0, 0, 0.5));
+            transition: transform 0.1s ease;
         }
 
         .canvas-item:active {
             cursor: grabbing;
-            transform: scale(1.1);
+            transform: scale(1.15) !important;
         }
 
         .emoji-art {
@@ -130,7 +236,6 @@
             scrollbar-width: none;
         }
 
-        /* Pulse animation for the main action button */
         @keyframes pulse-ring {
             0% {
                 box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
@@ -148,24 +253,106 @@
         .btn-pulse {
             animation: pulse-ring 2s infinite;
         }
+
+        .nickname-input {
+            background: repeating-linear-gradient(transparent, transparent 31px, #e5e7eb 31px, #e5e7eb 32px);
+            background-color: #fefce8;
+            line-height: 32px;
+            font-family: 'Caveat', cursive;
+            font-size: 1.5rem;
+            padding: 0 16px;
+            border: none;
+            box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .nickname-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3);
+        }
+
+        /* Interrogation Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+        }
+
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.95rem;
+            margin-bottom: 16px;
+            background: #f9fafb;
+            transition: border-color 0.2s;
+        }
+
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #f59e0b;
+        }
     </style>
 </head>
 
-<body class="h-screen flex flex-col md:flex-row overflow-hidden">
+<body class="h-[100dvh] flex flex-col md:flex-row overflow-hidden bg-gray-100">
 
     <!-- Sidebar / Inventory Tray -->
     <div
-        class="w-full md:w-80 bg-white shadow-xl flex flex-col z-20 h-[35%] md:h-full border-b md:border-b-0 md:border-r border-gray-200 order-2 md:order-1">
-        <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+        class="w-full h-[120px] md:h-full md:w-80 bg-white shadow-[0_-5px_15px_rgba(0,0,0,0.08)] md:shadow-xl flex flex-col z-20 shrink-0 border-t md:border-t-0 md:border-r border-gray-200 order-2 md:order-1">
+        <div class="p-2 md:p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center shrink-0">
             <div>
-                <h1 class="text-xl font-bold text-gray-800">NNPS Inventory</h1>
-                <p class="text-xs text-gray-500 mt-1">Add items to calculate your vibe.</p>
+                <h1 class="text-sm md:text-xl font-bold text-gray-800 leading-tight">NNPS Inventory</h1>
+                <p class="text-[10px] md:text-xs text-gray-500 hidden md:block mt-1">Add up to 15 items.</p>
             </div>
-            <div class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded-full" id="item-counter">0/8</div>
+            <div class="bg-blue-100 text-blue-800 text-[10px] md:text-xs font-bold px-2 py-1 md:px-3 md:py-1.5 rounded-full"
+                id="item-counter">0/15</div>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-4 no-scrollbar pb-20 md:pb-4">
-            <div id="inventory-grid" class="grid grid-cols-4 md:grid-cols-2 gap-3">
+        <div
+            class="flex-1 overflow-x-auto md:overflow-y-auto overflow-y-hidden md:overflow-x-hidden p-2 md:p-4 no-scrollbar">
+            <div id="inventory-grid"
+                class="flex md:grid md:grid-cols-2 gap-2 md:gap-3 h-full items-center md:items-start w-max md:w-full px-1 md:px-0">
                 <!-- Items injected via JS -->
             </div>
         </div>
@@ -173,58 +360,101 @@
 
     <!-- Main Canvas Area -->
     <div
-        class="flex-1 flex flex-col items-center justify-start md:justify-center p-4 md:p-8 bg-gray-100 relative order-1 md:order-2 h-[65%] md:h-full">
+        class="flex-1 flex flex-col items-center justify-start md:justify-center p-3 md:p-8 relative order-1 md:order-2 overflow-y-auto">
 
-        <div class="text-center mb-2 md:mb-6 mt-2 md:mt-0">
-            <h2 class="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">Who Were You In Primary School?</h2>
-            <p class="text-gray-500 text-xs md:text-base">1. Drag items to desk &nbsp; 2. Calculate Vibe &nbsp; 3. Share
-                to Group</p>
+        <!-- Header & Input -->
+        <div class="text-center mb-2 md:mb-6 w-full max-w-2xl mt-1 md:mt-0 shrink-0">
+            <h2 class="text-xl md:text-3xl font-bold text-gray-800 tracking-tight mb-1.5 md:mb-2 leading-none">Who Were
+                You In NNPS?</h2>
+            <div class="flex justify-center mb-1">
+                <input type="text" id="user-nickname" placeholder="Write your nickname here..."
+                    class="nickname-input w-full max-w-xs md:max-w-sm rounded-md text-center text-gray-800 placeholder-gray-400"
+                    maxlength="20">
+            </div>
         </div>
 
-        <!-- The Canvas Container -->
-        <div class="w-full max-w-2xl aspect-[4/3] md:aspect-video wood-frame relative overflow-hidden chalkboard shadow-2xl"
+        <!-- The Canvas Container (Simplified classes for html2canvas) -->
+        <div class="w-full max-w-2xl aspect-[4/3] md:aspect-video capture-container shadow-2xl shrink-0"
             id="capture-area">
 
-            <!-- Default Text -->
-            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-50"
+            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-50 transition-opacity duration-300"
                 id="empty-state">
-                <span class="chalk-text text-3xl md:text-5xl text-center px-4">Drag your memories here...</span>
-                <span class="chalk-text text-xl md:text-2xl mt-4">Let's see who you really were.</span>
+                <span class="chalk-text text-3xl md:text-5xl text-center px-4">Drag memories here...</span>
+                <span class="chalk-text text-xl md:text-2xl mt-2 md:mt-4">Double-tap an item to rotate!</span>
             </div>
 
-            <!-- Items drop here -->
             <div id="canvas-board" class="absolute inset-0 w-full h-full"></div>
 
-            <!-- The Persona Result Display -->
-            <div id="persona-result" class="persona-banner">
-                <div class="text-xs text-gray-400 mb-1 uppercase tracking-widest font-sans">Official NNPS Diagnosis
-                </div>
+            <!-- "AI" Scanning Overlay -->
+            <div id="scan-overlay" class="scan-overlay">
+                <div class="spinner"></div>
+                <div id="scan-text" class="text-lg font-bold tracking-wide">Initializing Vibe Check...</div>
+            </div>
+
+        </div>
+
+        <!-- Enhanced Bulletproof Persona Result Display (Moved to overlay) -->
+        <div id="persona-wrapper" class="persona-wrapper">
+            <div class="persona-banner">
+                <div id="p-name" class="persona-name">OFFICIAL DIAGNOSIS</div>
                 <div id="p-title" class="persona-title">THE NOISE MAKER</div>
-                <div id="p-desc" class="persona-desc">Your name was permanent on the list. You probably chopped cane
-                    today.</div>
+
+                <!-- New AI DNA Breakdown -->
+                <div id="p-dna" class="vibe-dna">100% Chaos</div>
+
+                <div class="roast-box">
+                    <div class="roast-header">Headmaster's Verdict</div>
+                    <div id="p-roast">"You definitely still owe the tuck shop money. You are the reason we started
+                        using Koboko."</div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 justify-center mt-6">
+                    <button onclick="shareImage(event)"
+                        class="flex-1 px-4 py-2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 shadow-md transition active:scale-95 flex items-center justify-center gap-2 text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m22 2-7 20-4-9-9-4Z" />
+                            <path d="M22 2 11 13" />
+                        </svg>
+                        Share Vibe
+                    </button>
+                    <button onclick="clearBoard()"
+                        class="flex-1 px-4 py-2 bg-gray-500 text-white font-bold rounded-lg hover:bg-gray-600 shadow-md transition active:scale-95 text-sm">
+                        Clear All
+                    </button>
+                    <button onclick="closePersonaOverlay()"
+                        class="w-full px-4 py-2 bg-gray-700 text-white font-bold rounded-lg hover:bg-gray-800 transition text-sm shadow">
+                        Close Diagnosis
+                    </button>
+                </div>
             </div>
         </div>
 
         <!-- Controls -->
-        <div class="mt-4 md:mt-6 flex flex-wrap justify-center gap-2 md:gap-3 w-full max-w-2xl">
-            <!-- New Primary Action Button -->
-            <button onclick="calculateVibe()"
-                class="w-full md:w-auto px-6 py-3 bg-amber-500 text-white font-black rounded-lg hover:bg-amber-600 transition active:scale-95 shadow-md flex items-center justify-center gap-2 btn-pulse text-lg"
+        <div class="mt-3 md:mt-6 flex flex-wrap justify-center gap-2 md:gap-3 w-full max-w-2xl pb-4 md:pb-0 shrink-0">
+            <button onclick="startVibeAnalysis()"
+                class="w-full md:w-auto px-5 py-2.5 md:px-6 md:py-3 bg-amber-500 text-white font-black rounded-lg hover:bg-amber-600 transition active:scale-95 shadow-md flex items-center justify-center gap-2 btn-pulse text-base md:text-lg"
                 id="vibe-btn">
                 🔍 Analyze My Vibe
             </button>
 
             <button onclick="addStamp()"
-                class="flex-1 md:flex-none px-3 py-2 md:px-4 md:py-3 bg-white text-red-700 font-semibold rounded-lg border border-red-200 hover:bg-red-50 transition active:scale-95 flex items-center justify-center gap-2 text-sm md:text-base">
-                Teacher's Stamp
+                class="flex-1 md:flex-none px-2 py-2 md:px-4 md:py-3 bg-white text-red-700 font-semibold rounded-lg border border-red-200 hover:bg-red-50 transition active:scale-95 flex items-center justify-center gap-1.5 md:gap-2 text-xs md:text-base">
+                Add Stamp
             </button>
             <button onclick="clearBoard()"
-                class="px-3 py-2 md:px-4 md:py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition active:scale-95 text-sm md:text-base">
+                class="px-3 py-2 md:px-4 md:py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition active:scale-95 text-xs md:text-base">
                 Clear
             </button>
-            <button onclick="exportImage()" id="export-btn"
-                class="flex-1 md:flex-none px-4 py-2 md:px-6 md:py-3 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 shadow-md transition active:scale-95 flex items-center justify-center gap-2 text-sm md:text-base opacity-50 cursor-not-allowed">
-                📸 Save Image
+            <button onclick="shareImage(event)" id="export-btn"
+                class="flex-1 md:flex-none px-3 py-2 md:px-6 md:py-3 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 shadow-md transition active:scale-95 flex items-center justify-center gap-1.5 md:gap-2 text-xs md:text-base opacity-50 cursor-not-allowed">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="md:w-[20px] md:h-[20px]">
+                    <path d="m22 2-7 20-4-9-9-4Z" />
+                    <path d="M22 2 11 13" />
+                </svg>
+                Send to Group
             </button>
         </div>
 
@@ -234,9 +464,61 @@
         </div>
     </div>
 
+    <!-- The Interrogation Modal -->
+    <div id="quiz-modal" class="modal-overlay">
+        <div class="modal-content relative">
+            <button onclick="closeQuizModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+
+            <div class="text-center mb-6">
+                <h3 class="text-2xl font-black text-gray-800 tracking-tight">Before we judge you...</h3>
+                <p class="text-sm text-gray-500 mt-1">The Headmaster needs a little more context.</p>
+            </div>
+
+            <div>
+                <label class="form-label">1. Where did you usually sit in class?</label>
+                <select id="user-seat" class="form-select">
+                    <option value="" disabled selected>Select your territory...</option>
+                    <option value="Front Row (Right in front of teacher)">Front Row (Teacher's Pet)</option>
+                    <option value="Middle Row (Trying to blend in)">Middle Row (Neutral Zone)</option>
+                    <option value="Back Bencher (Noise Maker HQ)">Back Bench (The Trenches)</option>
+                    <option value="By the Window (Daydreaming)">By the Window (Daydreamer)</option>
+                </select>
+
+                <label class="form-label">2. What was your most frequent offense or favorite memory?</label>
+                <textarea id="user-memory" class="form-textarea" rows="3"
+                    placeholder="E.g., Eating Gala under the desk, fighting over pencil shavings..."></textarea>
+
+                <button onclick="submitQuizAndAnalyze()"
+                    class="w-full py-3 bg-amber-500 text-white font-bold text-lg rounded-lg hover:bg-amber-600 transition active:scale-95 shadow-md flex items-center justify-center gap-2 mt-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m21 16-4 4-4-4" />
+                        <path d="M17 20V4" />
+                        <path d="m3 8 4-4 4 4" />
+                        <path d="M7 4v16" />
+                    </svg>
+                    Let the Roast Begin
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Inject Vite env variable into the global scope
+        window.GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
+    </script>
     <script>
-        // --- 1. Data Inventory with "Tags" for scoring ---
-        // Tags: 'smart', 'trouble', 'foodie', 'ajebutter' (rich), 'pako' (trenches), 'senior'
+        const ITEM_LIMIT = 15;
+        let apiKey = window.GEMINI_API_KEY || "";
+
+
+        // --- 1. Data Inventory ---
         const inventoryItems = [
             { id: 'mathset', icon: '📏', label: 'Math Set', tags: ['smart'] },
             { id: 'book', icon: '📓', label: '20 Leaves', tags: ['smart', 'pako'] },
@@ -260,54 +542,66 @@
             { id: 'sandals', icon: '👞', label: 'Cortina', tags: ['neutral'] }
         ];
 
-        // --- 2. The Personas Database ---
+        // --- 2. Personas & Intelligent Roasts ---
         const personas = {
-            trouble: { title: "The Unrepentant Noise Maker", desc: "Your name was permanent on the list. You definitely chopped cane today." },
-            foodie: { title: "The Break-Time Scavenger", desc: "You didn't come to read, you came to eat. 'Who is buying Gala?'" },
-            ajebutter: { title: "The 'Ajebutter' / Chief", desc: "Drinking Bobo while the rest of us drank N10 Ice Water. Mummy's pet!" },
-            smart: { title: "The I.T.K. (I Too Know)", desc: "Always reminding the teacher about homework. We still haven't forgiven you." },
-            pako: { title: "The Trenches Survivor", desc: "You saw shege but you survived. Dry indomie and tap water was your portion." },
-            senior: { title: "The Wicked Senior", desc: "Basic 6 Veteran. You made juniors do frog jumps for no logical reason." },
-            neutral: { title: "The 'I Just Came to Play'", desc: "You were just existing, dodging trouble and waiting for the bell to ring." }
+            trouble: {
+                title: "The Unrepentant Noise Maker",
+                roast: "We saw [ITEM_1] and immediately knew. You are the reason teachers started bringing cane to class. I hope you finally have sense now."
+            },
+            foodie: {
+                title: "The Break-Time Scavenger",
+                roast: "Only a true glutton puts [ITEM_1] and [ITEM_2] together. You definitely begged for a piece of everyone's Gala."
+            },
+            ajebutter: {
+                title: "Mummy's Pet (Ajebutter)",
+                roast: "Detecting [ITEM_1]... You definitely cried when somebody touched your white socks. Is it your mates that have two heads?"
+            },
+            smart: {
+                title: "The I.T.K. (I Too Know)",
+                roast: "Anyone who proudly displays [ITEM_1] is suspect. You were everyone's enemy on Friday afternoons. We still haven't forgiven you."
+            },
+            pako: {
+                title: "The Trenches Survivor",
+                roast: "Seeing [ITEM_1] here confirms it. Eating dry indomie without water was your superpower. The gate hawkers knew your first name."
+            },
+            senior: {
+                title: "The Wicked Senior",
+                roast: "You packed [ITEM_1]? You definitely felt like a Military General just because you were 11 years old. Abeg go and sit down."
+            },
+            neutral: {
+                title: "The Ghost Student",
+                roast: "You just brought [ITEM_1]? Nobody remembers if you were actually in our set or if you were just hallucinating."
+            }
         };
 
-        const stamps = [
-            "A bright boy but plays too much.",
-            "Needs to sit up.",
-            "Easily distracted.",
-            "See me after class!",
-            "Tear a sheet of paper!"
-        ];
+        const stamps = ["A bright boy but plays too much.", "Needs to sit up.", "Easily distracted.", "See me after class!", "Tear a sheet of paper!"];
 
-        // --- 3. Initialize App ---
+        // --- 3. Init ---
         const inventoryGrid = document.getElementById('inventory-grid');
         const canvasBoard = document.getElementById('canvas-board');
         const emptyState = document.getElementById('empty-state');
         const exportBtn = document.getElementById('export-btn');
         let zIndexCounter = 10;
-        let selectedTags = []; // Store tags of added items
+        let selectedItems = []; // Store full item objects added to canvas
 
-        // Render Inventory
         inventoryItems.forEach(item => {
             const btn = document.createElement('button');
-            btn.className = 'flex flex-col items-center justify-center p-2 md:p-3 bg-white border border-gray-100 rounded-xl hover:bg-emerald-50 hover:border-emerald-200 transition active:scale-95 shadow-sm';
+            btn.className = 'flex-shrink-0 w-20 h-20 md:w-auto md:h-auto flex flex-col items-center justify-center p-1 md:p-3 bg-white border border-gray-100 rounded-xl hover:bg-emerald-50 hover:border-emerald-200 transition active:scale-95 shadow-sm';
             btn.onclick = () => addItemToCanvas(item);
             btn.innerHTML = `
-                <span class="text-3xl md:text-4xl mb-1">${item.icon}</span>
-                <span class="text-[10px] md:text-xs font-semibold text-gray-600 text-center leading-tight">${item.label}</span>
+                <span class="text-3xl md:text-4xl mb-0.5 md:mb-1 drop-shadow-sm leading-none">${item.icon}</span>
+                <span class="text-[9px] md:text-xs font-semibold text-gray-600 text-center leading-tight truncate w-full px-1">${item.label}</span>
             `;
             inventoryGrid.appendChild(btn);
         });
 
-        // --- 4. Canvas Logic ---
+        // --- 4. Logic ---
         function updateCounter() {
             const count = canvasBoard.querySelectorAll('.canvas-item:not(.teacher-stamp-container)').length;
-            document.getElementById('item-counter').innerText = `${count}/8`;
+            document.getElementById('item-counter').innerText = `${count}/${ITEM_LIMIT}`;
 
-            // Hide persona result if they start changing the board
-            document.getElementById('persona-result').classList.remove('active');
+            document.getElementById('persona-wrapper').classList.remove('active');
 
-            // Enable/disable export based on items
             if (count > 0) {
                 exportBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             } else {
@@ -316,54 +610,76 @@
         }
 
         function addItemToCanvas(itemData) {
-            if (canvasBoard.querySelectorAll('.canvas-item:not(.teacher-stamp-container)').length >= 8) {
-                showToast("Desk is full! Calculate your vibe or remove items.");
+            if (canvasBoard.querySelectorAll('.canvas-item:not(.teacher-stamp-container)').length >= ITEM_LIMIT) {
+                showToast(`Maximum limit of ${ITEM_LIMIT} items reached!`);
                 return;
             }
 
-            emptyState.style.display = 'none';
-            selectedTags.push(...itemData.tags); // Add to our logic pool
+            emptyState.style.opacity = '0';
+            setTimeout(() => { if (canvasBoard.children.length > 0) emptyState.style.display = 'none'; }, 300);
+
+            // Create a unique instance ID for the DOM element to map it back to selectedItems
+            const instanceId = 'item_' + Date.now() + Math.floor(Math.random() * 1000);
+            selectedItems.push({ ...itemData, instanceId });
 
             const itemDiv = document.createElement('div');
             itemDiv.className = 'canvas-item flex flex-col items-center justify-center';
-            itemDiv.dataset.id = itemData.id; // Store ID to remove tags later
+            itemDiv.dataset.instanceId = instanceId;
 
-            const rot = (Math.random() * 30) - 15;
+            const rot = (Math.random() * 40) - 20;
             itemDiv.style.transform = `rotate(${rot}deg)`;
             itemDiv.dataset.baseRotation = rot;
 
             itemDiv.innerHTML = `
-                <div class="emoji-art drop-shadow-lg">${itemData.icon}</div>
-                <div class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold cursor-pointer opacity-0 hover:opacity-100 transition shadow delete-btn" style="transform: rotate(${-rot}deg)">✕</div>
+                <div class="emoji-art drop-shadow-lg text-[2.8rem] md:text-6xl">${itemData.icon}</div>
+                <div class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 md:w-6 md:h-6 flex items-center justify-center text-xs font-bold cursor-pointer opacity-0 hover:opacity-100 transition shadow delete-btn" style="transform: rotate(${-rot}deg)">✕</div>
             `;
 
-            const offsetX = (Math.random() * 60) - 30;
+            const offsetX = (Math.random() * 80) - 40;
             const offsetY = (Math.random() * 60) - 30;
-
-            itemDiv.style.left = `calc(50% - 30px + ${offsetX}px)`;
-            itemDiv.style.top = `calc(50% - 30px + ${offsetY}px)`;
+            itemDiv.style.left = `calc(50% - 25px + ${offsetX}px)`;
+            itemDiv.style.top = `calc(50% - 25px + ${offsetY}px)`;
             itemDiv.style.zIndex = zIndexCounter++;
 
-            // Delete functionality
+            // Double tap logic
+            let lastTap = 0;
+            itemDiv.addEventListener('touchend', (e) => {
+                if (e.target.classList.contains('delete-btn')) return;
+                const currentTime = new Date().getTime();
+                const tapLength = currentTime - lastTap;
+                if (tapLength < 400 && tapLength > 0) {
+                    const newRot = (Math.random() * 360);
+                    itemDiv.dataset.baseRotation = newRot;
+                    itemDiv.style.transform = `rotate(${newRot}deg)`;
+                    e.preventDefault();
+                }
+                lastTap = currentTime;
+            });
+
+            itemDiv.addEventListener('dblclick', (e) => {
+                if (e.target.classList.contains('delete-btn')) return;
+                const newRot = (Math.random() * 360);
+                itemDiv.dataset.baseRotation = newRot;
+                itemDiv.style.transform = `rotate(${newRot}deg)`;
+            });
+
             const deleteBtn = itemDiv.querySelector('.delete-btn');
             deleteBtn.onclick = (e) => {
                 e.stopPropagation();
 
-                // Remove tags from the pool
-                const itemObj = inventoryItems.find(i => i.id === itemData.id);
-                itemObj.tags.forEach(tag => {
-                    const index = selectedTags.indexOf(tag);
-                    if (index > -1) selectedTags.splice(index, 1);
-                });
+                // Remove from tracking array
+                selectedItems = selectedItems.filter(i => i.instanceId !== instanceId);
 
                 itemDiv.remove();
                 updateCounter();
                 if (canvasBoard.children.length === 0 ||
                     (canvasBoard.children.length === 1 && canvasBoard.querySelector('.teacher-stamp-container'))) {
                     emptyState.style.display = 'flex';
+                    setTimeout(() => emptyState.style.opacity = '0.5', 10);
                 }
             };
 
+            // Show delete button on mobile touch
             itemDiv.addEventListener('touchstart', () => {
                 const allDeletes = document.querySelectorAll('.delete-btn');
                 allDeletes.forEach(btn => btn.style.opacity = '0');
@@ -376,19 +692,17 @@
             updateCounter();
         }
 
+        // --- Dragging Logic ---
         function makeDraggable(element) {
             let isDragging = false;
             let startX, startY, initialLeft, initialTop;
 
             const startDrag = (e) => {
                 if (e.target.classList.contains('delete-btn')) return;
-
-                // Hide persona result when dragging starts
-                document.getElementById('persona-result').classList.remove('active');
+                document.getElementById('persona-wrapper').classList.remove('active');
 
                 isDragging = true;
                 element.style.zIndex = zIndexCounter++;
-
                 const baseRot = element.dataset.baseRotation;
                 element.style.transform = `rotate(${baseRot}deg) scale(1.15)`;
 
@@ -397,7 +711,6 @@
 
                 startX = clientX;
                 startY = clientY;
-
                 initialLeft = parseFloat(element.style.left) || 0;
                 initialTop = parseFloat(element.style.top) || 0;
 
@@ -409,7 +722,6 @@
                     element.style.left = `${initialLeft}px`;
                     element.style.top = `${initialTop}px`;
                 }
-
                 if (e.type.includes('touch')) e.preventDefault();
             };
 
@@ -437,55 +749,239 @@
             document.addEventListener('touchend', stopDrag);
         }
 
-        // --- 5. The Core Loop: Calculate Vibe ---
-        function calculateVibe() {
-            const itemCount = canvasBoard.querySelectorAll('.canvas-item:not(.teacher-stamp-container)').length;
-
+        // --- 5. Intelligent Vibe Calculation ---
+        window.startVibeAnalysis = function () {
+            const itemCount = selectedItems.length;
             if (itemCount < 3) {
-                showToast("Add at least 3 items to calculate your true vibe!");
+                showToast("Add at least 3 items for a proper Vibe Check!");
                 return;
             }
 
-            // Tally up the tags
-            const tally = {};
-            selectedTags.forEach(tag => {
-                if (tag !== 'neutral') {
-                    tally[tag] = (tally[tag] || 0) + 1;
-                }
-            });
+            // Hide previous results
+            document.getElementById('persona-wrapper').classList.remove('active');
 
-            // Find the highest scoring trait
-            let topTrait = 'neutral';
-            let maxCount = 0;
+            // Show Interrogation Modal Instead of jumping straight to scan
+            const modal = document.getElementById('quiz-modal');
+            modal.style.display = 'flex';
+            // Slight delay for opacity transition
+            setTimeout(() => modal.classList.add('active'), 10);
+        }
 
-            for (const [tag, count] of Object.entries(tally)) {
-                if (count > maxCount) {
-                    maxCount = count;
-                    topTrait = tag;
-                }
+        window.closeQuizModal = function () {
+            const modal = document.getElementById('quiz-modal');
+            modal.classList.remove('active');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        window.submitQuizAndAnalyze = function () {
+            const seat = document.getElementById('user-seat').value;
+            const memory = document.getElementById('user-memory').value.trim();
+
+            if (!seat) {
+                showToast("Please select where you sat!");
+                return;
             }
 
-            // Fallback to neutral if tie or no strong traits
-            if (maxCount === 0) topTrait = 'neutral';
+            closeQuizModal();
 
-            // Show the result
-            const resultData = personas[topTrait];
-            document.getElementById('p-title').innerText = resultData.title;
-            document.getElementById('p-desc').innerText = resultData.desc;
+            const scanOverlay = document.getElementById('scan-overlay');
+            const scanText = document.getElementById('scan-text');
 
-            const banner = document.getElementById('persona-result');
-            banner.style.zIndex = zIndexCounter + 10; // Ensure it's always on top
-            banner.classList.add('active');
+            scanOverlay.style.display = 'flex';
 
-            // Optional: Auto-trigger save excitement
-            showToast("Vibe calculated! Save and share to the group.");
+            const randomItem = selectedItems[Math.floor(Math.random() * selectedItems.length)].label;
 
-            // Bounce the save button
+            setTimeout(() => scanText.innerText = "Consulting the Headmaster...", 100);
+            setTimeout(() => scanText.innerText = `Analyzing your ${randomItem} & seating position...`, 1200);
+            setTimeout(() => scanText.innerText = "Generating pure trauma...", 2500);
+
+            // Call Gemini API
+            fetchGeminiRoast(seat, memory);
+        }
+
+        async function fetchGeminiRoast(seat, memory, retryCount = 0) {
+            const currentApiKey = window.GEMINI_API_KEY || apiKey;
+            if (!currentApiKey) {
+                // No key provided, immediately fallback
+                finishScanWithFallback();
+                return;
+            }
+
+            const itemLabels = selectedItems.map(i => i.label).join(", ");
+            const nickname = document.getElementById('user-nickname').value.trim() || "This student";
+
+            const promptText = `
+                You are a hilarious, strict, and savage Nigerian primary school headmaster from a public/military school in the 2010s.
+                Analyze this student's profile:
+                - Name: ${nickname}
+                - Childhood items they brought: ${itemLabels}
+                - Seating position: ${seat}
+                - Favorite memory/frequent offense: ${memory || "None provided"}
+
+                Based on this, roast them with Nigerian flavor. 
+                Do NOT use markdown. Reply ONLY with a valid JSON object matching the schema.
+            `;
+
+            const payload = {
+                contents: [{ parts: [{ text: promptText }] }],
+                systemInstruction: { parts: [{ text: "Respond only with valid JSON. Do not include markdown formatting or backticks." }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            title: { type: "STRING", description: "A hilarious, uppercase persona title (e.g., THE UNREPENTANT NOISE MAKER)" },
+                            dna: { type: "STRING", description: "A vibe DNA string with percentages (e.g., 70% TROUBLE • 30% AJEBUTTER)" },
+                            roast: { type: "STRING", description: "A 2-3 sentence savage roast written in Nigerian English/Slang. Address them directly as 'You'." }
+                        },
+                        required: ["title", "dna", "roast"]
+                    }
+                }
+            };
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${currentApiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+
+                const data = await response.json();
+                const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (!jsonText) throw new Error("Empty response from Gemini");
+
+                const result = JSON.parse(jsonText);
+
+                // Hide overlay and update UI with AI response
+                document.getElementById('scan-overlay').style.display = 'none';
+                displayVibe(result.title, result.dna, result.roast);
+
+            } catch (error) {
+                console.error("Gemini API failed:", error);
+                if (retryCount < 5) {
+                    const backoff = Math.pow(2, retryCount) * 1000;
+                    setTimeout(() => fetchGeminiRoast(seat, memory, retryCount + 1), backoff);
+                } else {
+                    // All retries failed, run the local fallback
+                    finishScanWithFallback();
+                }
+            }
+        }
+
+        function finishScanWithFallback() {
+            document.getElementById('scan-overlay').style.display = 'none';
+            generateFinalVibe(); // The old local logic
+        }
+
+        function displayVibe(title, dna, roast) {
+            const nicknameInput = document.getElementById('user-nickname').value.trim();
+            const nameDisplay = document.getElementById('p-name');
+            if (nicknameInput) {
+                nameDisplay.innerText = `${nicknameInput} WAS:`;
+                nameDisplay.style.color = '#f87171';
+            } else {
+                nameDisplay.innerText = "OFFICIAL NNPS DIAGNOSIS:";
+                nameDisplay.style.color = '#9ca3af';
+            }
+
+            document.getElementById('p-title').innerText = title;
+            document.getElementById('p-dna').innerText = "DNA: " + dnaTextFormatter(dna);
+            document.getElementById('p-roast').innerText = `"${roast}"`;
+
+            const wrapper = document.getElementById('persona-wrapper');
+            wrapper.classList.add('active');
+
+            showToast("Vibe calculated! Save and drop it in the group.");
+
+            const exportBtn = document.getElementById('export-btn');
             exportBtn.classList.add('scale-110', 'bg-emerald-500');
             setTimeout(() => exportBtn.classList.remove('scale-110', 'bg-emerald-500'), 500);
         }
 
-        // --- 6. Utilities ---
+        function dnaTextFormatter(dnaString) {
+            // Helper to ensure DNA looks clean even if Gemini formats it weirdly
+            return dnaString.toUpperCase().replace(/,/g, ' • ').replace(/AND/g, '•');
+        }
+
+        window.closePersonaOverlay = function () {
+            document.getElementById('persona-wrapper').classList.remove('active');
+        }
+
+        function generateFinalVibe() {
+            // ... Fallback logic for when API is unavailable ...
+            const tally = {};
+            let totalTags = 0;
+            selectedItems.forEach(item => {
+                item.tags.forEach(tag => {
+                    if (tag !== 'neutral') {
+                        tally[tag] = (tally[tag] || 0) + 1;
+                        totalTags++;
+                    }
+                });
+            });
+
+            // 2. Find Dominant Traits
+            let traitsArray = Object.keys(tally).map(key => ({ tag: key, count: tally[key] }));
+            traitsArray.sort((a, b) => b.count - a.count);
+
+            let topTrait = traitsArray.length > 0 ? traitsArray[0].tag : 'neutral';
+            let secondTrait = traitsArray.length > 1 ? traitsArray[1].tag : null;
+
+            // 3. Build "Vibe DNA" string
+            let dnaText = "";
+            if (totalTags > 0) {
+                const topPercent = Math.round((traitsArray[0].count / totalTags) * 100);
+                dnaText = `${topPercent}% ${topTrait.toUpperCase()}`;
+                if (secondTrait && traitsArray[1].count > 0) {
+                    const secPercent = Math.round((traitsArray[1].count / totalTags) * 100);
+                    dnaText += ` • ${secPercent}% ${secondTrait.toUpperCase()}`;
+                }
+            } else {
+                dnaText = "100% UNKNOWN VIBE";
+            }
+            document.getElementById('p-dna').innerText = "DNA: " + dnaText;
+
+            // 4. Handle Nickname
+            const nicknameInput = document.getElementById('user-nickname').value.trim();
+            const nameDisplay = document.getElementById('p-name');
+            if (nicknameInput) {
+                nameDisplay.innerText = `${nicknameInput} WAS:`;
+                nameDisplay.style.color = '#f87171';
+            } else {
+                nameDisplay.innerText = "OFFICIAL NNPS DIAGNOSIS:";
+                nameDisplay.style.color = '#9ca3af';
+            }
+
+            // 5. Intelligent Roast Generation
+            const resultData = personas[topTrait];
+            document.getElementById('p-title').innerText = resultData.title;
+
+            // Get unique item names added by user to inject into roast
+            const uniqueItemLabels = [...new Set(selectedItems.map(i => i.label))];
+            let item1 = uniqueItemLabels[0] || "bag";
+            let item2 = uniqueItemLabels.length > 1 ? uniqueItemLabels[1] : item1;
+
+            // Format roast
+            let customRoast = resultData.roast
+                .replace('[ITEM_1]', `"${item1}"`)
+                .replace('[ITEM_2]', `"${item2}"`);
+
+            document.getElementById('p-roast').innerText = customRoast;
+
+            // 6. Reveal
+            const wrapper = document.getElementById('persona-wrapper');
+            wrapper.classList.add('active');
+
+            showToast("Vibe calculated! Save and drop it in the group.");
+
+            exportBtn.classList.add('scale-110', 'bg-emerald-500');
+            setTimeout(() => exportBtn.classList.remove('scale-110', 'bg-emerald-500'), 500);
+        }
+
+        // --- 6. Utilities & Native Sharing ---
         let currentStampIndex = 0;
 
         function addStamp() {
@@ -502,20 +998,23 @@
             stampContainer.innerHTML = `<div class="teacher-stamp">${stamps[currentStampIndex]}</div>`;
 
             currentStampIndex = (currentStampIndex + 1) % stamps.length;
-            stampContainer.style.left = '5%';
-            stampContainer.style.top = '75%';
+            stampContainer.style.left = '10%';
+            stampContainer.style.top = '70%';
             stampContainer.style.zIndex = zIndexCounter++;
 
             canvasBoard.appendChild(stampContainer);
             makeDraggable(stampContainer);
         }
 
+
+
         function clearBoard() {
             canvasBoard.innerHTML = '';
-            document.getElementById('persona-result').classList.remove('active');
+            document.getElementById('persona-wrapper').classList.remove('active');
             emptyState.style.display = 'flex';
+            setTimeout(() => emptyState.style.opacity = '0.5', 10);
             currentStampIndex = 0;
-            selectedTags = [];
+            selectedItems = [];
             updateCounter();
         }
 
@@ -530,17 +1029,21 @@
             }, 3000);
         }
 
-        async function exportImage() {
+        // Native Share Function
+        async function shareImage(e) {
             const itemCount = canvasBoard.querySelectorAll('.canvas-item:not(.teacher-stamp-container)').length;
             if (itemCount === 0) {
-                showToast("Add some items before saving!");
+                showToast("Add some items before sharing!");
                 return;
             }
 
-            const btn = document.getElementById('export-btn');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '📸 Capturing...';
-            btn.disabled = true;
+            // Get the button that triggered the share
+            const btn = e && e.target ? e.target.closest('button') : document.getElementById('export-btn');
+            const originalHTML = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.innerHTML = '⏳ Formatting...';
+                btn.disabled = true;
+            }
 
             const deletes = document.querySelectorAll('.delete-btn');
             deletes.forEach(d => d.style.display = 'none');
@@ -548,27 +1051,63 @@
             const captureArea = document.getElementById('capture-area');
 
             try {
+                // Ensure layout is stable before capture
+                await new Promise(r => setTimeout(r, 200));
+
                 const canvas = await html2canvas(captureArea, {
-                    scale: 2,
-                    backgroundColor: null,
-                    logging: false
+                    scale: 2, // High resolution
+                    backgroundColor: '#166534', // Force green background fallback
+                    useCORS: true,
+                    logging: false,
+                    windowWidth: captureArea.scrollWidth,
+                    windowHeight: captureArea.scrollHeight
                 });
 
-                const image = canvas.toDataURL("image/png", 1.0);
-                const link = document.createElement('a');
-                link.download = 'My_NNPS_Vibe.png';
-                link.href = image;
-                link.click();
+                canvas.toBlob(async (blob) => {
+                    const file = new File([blob], 'NNPS_Vibe.png', { type: 'image/png' });
 
-                showToast("Image Saved! Paste it in the group chat.");
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        try {
+                            btn.innerHTML = '📱 Opening WhatsApp...';
+                            await navigator.share({
+                                files: [file],
+                                title: 'My NNPS Vibe',
+                                text: 'Lmaoo look at my primary school diagnosis 😭 Click the link to check yours!'
+                            });
+                            showToast("Shared successfully!");
+                        } catch (error) {
+                            if (error.name !== 'AbortError') {
+                                fallbackDownload(canvas);
+                            }
+                        }
+                    } else {
+                        fallbackDownload(canvas);
+                    }
+                    deletes.forEach(d => d.style.display = 'flex');
+                    if (btn) {
+                        btn.innerHTML = originalHTML;
+                        btn.disabled = false;
+                    }
+                }, 'image/png');
+
             } catch (err) {
                 console.error("Export failed:", err);
-                alert("Couldn't save image. Try taking a screenshot!");
-            } finally {
+                showToast("Couldn't process image. Try again!");
                 deletes.forEach(d => d.style.display = 'flex');
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+                if (btn) {
+                    btn.innerHTML = originalHTML;
+                    btn.disabled = false;
+                }
             }
+        }
+
+        function fallbackDownload(canvas) {
+            showToast("Saving image to device...");
+            const image = canvas.toDataURL("image/png", 1.0);
+            const link = document.createElement('a');
+            link.download = 'My_NNPS_Vibe.png';
+            link.href = image;
+            link.click();
         }
     </script>
 </body>
