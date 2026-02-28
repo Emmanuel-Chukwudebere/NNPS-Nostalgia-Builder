@@ -813,19 +813,19 @@
             const nickname = document.getElementById('user-nickname').value.trim() || "This student";
 
             const promptText = `
-                You are a hilarious, strict, and savage Nigerian primary school headmaster from a public/military school in the 2010s.
+                You are a hilarious, observant, and nostalgic Nigerian primary school headmaster from a public/military school in the 2010s.
                 Analyze this student's profile:
                 - Name: ${nickname}
                 - Childhood items they brought: ${itemLabels}
                 - Seating position: ${seat}
                 - Favorite memory/frequent offense: ${memory || "None provided"}
 
-                Based on this, roast them with Nigerian flavor. 
+                Based on this, provide a funny, teasing, but lighthearted analysis with Nigerian flavor. Do not be overly harsh or use offensive words.
                 You MUST respond ONLY with a valid JSON object. Do NOT include markdown formatting or backticks.
                 The JSON object must have exactly these three keys:
-                "title": A hilarious, uppercase persona title (e.g., THE UNREPENTANT NOISE MAKER)
-                "dna": A vibe DNA string with percentages (e.g., 70% TROUBLE • 30% AJEBUTTER)
-                "roast": A 2-3 sentence savage roast written in Nigerian English/Slang. Address them directly as 'You'.
+                "title": A hilarious, uppercase persona title (e.g., THE NOISE MAKER, THE DAYDREAMER)
+                "dna": A vibe DNA string with percentages (e.g., 70% PLAYFUL • 30% AJEBUTTER)
+                "roast": A 2-3 sentence funny and nostalgic analysis written in Nigerian English/Slang. Address them directly as 'You'.
             `;
 
             const payload = {
