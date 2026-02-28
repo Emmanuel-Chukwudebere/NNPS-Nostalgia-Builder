@@ -583,6 +583,8 @@
         const exportBtn = document.getElementById('export-btn');
         let zIndexCounter = 10;
         let selectedItems = []; // Store full item objects added to canvas
+        window.preGeneratedShareFile = null;
+        window.isGeneratingShareFile = false;
 
         inventoryItems.forEach(item => {
             const btn = document.createElement('button');
@@ -896,6 +898,9 @@
 
             showToast("Vibe calculated! Save and drop it in the group.");
 
+            // Start pre-generating the share file immediately to defeat mobile timeout
+            generateShareCanvas();
+
             const exportBtn = document.getElementById('export-btn');
             exportBtn.classList.add('scale-110', 'bg-emerald-500');
             setTimeout(() => exportBtn.classList.remove('scale-110', 'bg-emerald-500'), 500);
@@ -977,6 +982,9 @@
 
             showToast("Vibe calculated! Save and drop it in the group.");
 
+            // Start pre-generating the share file immediately to defeat mobile timeout
+            generateShareCanvas();
+
             exportBtn.classList.add('scale-110', 'bg-emerald-500');
             setTimeout(() => exportBtn.classList.remove('scale-110', 'bg-emerald-500'), 500);
         }
@@ -1015,6 +1023,7 @@
             setTimeout(() => emptyState.style.opacity = '0.5', 10);
             currentStampIndex = 0;
             selectedItems = [];
+            window.preGeneratedShareFile = null;
             updateCounter();
         }
 
@@ -1027,86 +1036,104 @@
                 toast.style.transform = 'translateY(-20px)';
                 toast.style.opacity = '0';
             }, 3000);
-        }
+            // Background Generation Function
+            async function generateShareCanvas() {
+                if (window.isGeneratingShareFile) return;
+                window.isGeneratingShareFile = true;
+                window.preGeneratedShareFile = null;
 
-        // Optimized Native Share Function
-        async function shareImage(e) {
-            const itemCount = canvasBoard.querySelectorAll('.canvas-item:not(.teacher-stamp-container)').length;
-            if (itemCount === 0) {
-                showToast("Add some items before sharing!");
-                return;
-            }
+                const deletes = document.querySelectorAll('.delete-btn');
+                deletes.forEach(d => d.style.display = 'none');
+                const captureArea = document.getElementById('capture-area');
 
-            // Get the button that triggered the share
-            const btn = e && e.target ? e.target.closest('button') : document.getElementById('export-btn');
-            const originalHTML = btn ? btn.innerHTML : '';
-            if (btn) {
-                btn.innerHTML = '⏳ Processing...';
-                btn.disabled = true;
-            }
+                try {
+                    // Ensure layout is stable
+                    await new Promise(r => setTimeout(r, 200));
 
-            // Hide delete buttons for the capture
-            const deletes = document.querySelectorAll('.delete-btn');
-            deletes.forEach(d => d.style.display = 'none');
-
-            const captureArea = document.getElementById('capture-area');
-
-            try {
-                // Short delay to ensure delete buttons are hidden
-                await new Promise(r => setTimeout(r, 100));
-
-                const canvas = await html2canvas(captureArea, {
-                    scale: 2,
-                    backgroundColor: '#166534',
-                    useCORS: true,
-                    logging: false,
-                    windowWidth: captureArea.scrollWidth,
-                    windowHeight: captureArea.scrollHeight
-                });
-
-                // Convert to Blob and File wrapper
-                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-                const file = new File([blob], 'NNPS_Vibe.png', { type: 'image/png' });
-
-                // Restore UI immediately
-                deletes.forEach(d => d.style.display = '');
-                if (btn) {
-                    btn.innerHTML = originalHTML;
-                    btn.disabled = false;
-                }
-
-                // Trigger Share Sheet
-                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                    showToast("Opening WhatsApp/Share...");
-                    await navigator.share({
-                        files: [file],
-                        title: 'My NNPS Vibe Checks Out',
-                        text: 'Lmaoo look at my official primary school diagnosis 😭 Nigerian teachers were something else!'
+                    const canvas = await html2canvas(captureArea, {
+                        scale: 2,
+                        backgroundColor: '#166534',
+                        useCORS: true,
+                        logging: false,
+                        windowWidth: captureArea.scrollWidth,
+                        windowHeight: captureArea.scrollHeight
                     });
-                } else {
-                    // Fallback for Desktop/Unsupported browsers
-                    showToast("Share sheet not supported. Downloading instead!");
-                    fallbackDownload(canvas);
-                }
 
-            } catch (err) {
-                console.error("Export failed:", err);
-                showToast("Share failed. Try taking a screenshot!");
-                deletes.forEach(d => d.style.display = '');
-                if (btn) {
-                    btn.innerHTML = originalHTML;
-                    btn.disabled = false;
+                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                    window.preGeneratedShareFile = new File([blob], 'NNPS_Vibe.png', { type: 'image/png' });
+                    window.preGeneratedShareCanvas = canvas; // fallback
+
+                } catch (err) {
+                    console.error("Background generation failed:", err);
+                } finally {
+                    deletes.forEach(d => d.style.display = '');
+                    window.isGeneratingShareFile = false;
                 }
             }
-        }
 
-        function fallbackDownload(canvas) {
-            showToast("Saving image to device...");
-            const image = canvas.toDataURL("image/png", 1.0);
-            const link = document.createElement('a');
-            link.download = 'My_NNPS_Vibe.png';
-            link.href = image;
-            link.click();
+            // Optimized Native Share Function
+            async function shareImage(e) {
+                const itemCount = canvasBoard.querySelectorAll('.canvas-item:not(.teacher-stamp-container)').length;
+                if (itemCount === 0) {
+                    showToast("Add some items before sharing!");
+                    return;
+                }
+
+                const btn = e && e.target ? e.target.closest('button') : document.getElementById('export-btn');
+                const originalHTML = btn ? btn.innerHTML : '';
+                if (btn) {
+                    btn.innerHTML = '⏳ Finishing...';
+                    btn.disabled = true;
+                }
+
+                // Wait if still generating
+                if (window.isGeneratingShareFile) {
+                    while (window.isGeneratingShareFile) {
+                        await new Promise(r => setTimeout(r, 100));
+                    }
+                }
+
+                try {
+                    if (!window.preGeneratedShareFile) {
+                        throw new Error("preGeneratedShareFile is missing");
+                    }
+
+                    const file = window.preGeneratedShareFile;
+
+                    // Sync Native Share Trigger
+                    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                        await navigator.share({
+                            files: [file],
+                            title: 'My NNPS Vibe Checks Out',
+                            text: 'Lmaoo look at my official primary school diagnosis 😭 Nigerian teachers were something else!'
+                        });
+                    } else {
+                        showToast("Share sheet not supported. Downloading instead!");
+                        if (window.preGeneratedShareCanvas) {
+                            fallbackDownload(window.preGeneratedShareCanvas);
+                        }
+                    }
+                } catch (err) {
+                    console.error("Export failed:", err);
+                    if (err.name !== 'AbortError') {
+                        showToast("Share unavailable. Try taking a screenshot!");
+                    }
+                } finally {
+                    if (btn) {
+                        btn.innerHTML = originalHTML;
+                        btn.disabled = false;
+                    }
+                }
+            }
+
+            function fallbackDownload(canvas) {
+                showToast("Saving image to device...");
+                const image = canvas.toDataURL("image/png", 1.0);
+                const link = document.createElement('a');
+                link.download = 'My_NNPS_Vibe.png';
+                link.href = image;
+                link.click();
+            }
         }
     </script>
 </body>
