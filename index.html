@@ -511,11 +511,11 @@
 
     <script type="module">
         // Inject Vite env variable into the global scope
-        window.GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
+        window.MISTRAL_API_KEY = import.meta.env.VITE_MISTRAL_API_KEY || "";
     </script>
     <script>
         const ITEM_LIMIT = 15;
-        let apiKey = window.GEMINI_API_KEY || "";
+        let apiKey = window.MISTRAL_API_KEY || "";
 
 
         // --- 1. Data Inventory ---
@@ -802,7 +802,7 @@
         }
 
         async function fetchGeminiRoast(seat, memory, retryCount = 0) {
-            const currentApiKey = window.GEMINI_API_KEY || apiKey;
+            const currentApiKey = window.MISTRAL_API_KEY || apiKey;
             if (!currentApiKey) {
                 // No key provided, immediately fallback
                 finishScanWithFallback();
@@ -821,45 +821,44 @@
                 - Favorite memory/frequent offense: ${memory || "None provided"}
 
                 Based on this, roast them with Nigerian flavor. 
-                Do NOT use markdown. Reply ONLY with a valid JSON object matching the schema.
+                You MUST respond ONLY with a valid JSON object. Do NOT include markdown formatting or backticks.
+                The JSON object must have exactly these three keys:
+                "title": A hilarious, uppercase persona title (e.g., THE UNREPENTANT NOISE MAKER)
+                "dna": A vibe DNA string with percentages (e.g., 70% TROUBLE • 30% AJEBUTTER)
+                "roast": A 2-3 sentence savage roast written in Nigerian English/Slang. Address them directly as 'You'.
             `;
 
             const payload = {
-                contents: [{ parts: [{ text: promptText }] }],
-                systemInstruction: { parts: [{ text: "Respond only with valid JSON. Do not include markdown formatting or backticks." }] },
-                generationConfig: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: "OBJECT",
-                        properties: {
-                            title: { type: "STRING", description: "A hilarious, uppercase persona title (e.g., THE UNREPENTANT NOISE MAKER)" },
-                            dna: { type: "STRING", description: "A vibe DNA string with percentages (e.g., 70% TROUBLE • 30% AJEBUTTER)" },
-                            roast: { type: "STRING", description: "A 2-3 sentence savage roast written in Nigerian English/Slang. Address them directly as 'You'." }
-                        },
-                        required: ["title", "dna", "roast"]
-                    }
-                }
+                model: "mistral-small-latest",
+                messages: [
+                    { role: "system", content: "Respond only with valid JSON." },
+                    { role: "user", content: promptText }
+                ],
+                response_format: { type: "json_object" }
             };
 
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${currentApiKey}`, {
+                const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentApiKey}`
+                    },
                     body: JSON.stringify(payload)
                 });
 
                 if (!response.ok) throw new Error(`API Error: ${response.status}`);
 
                 const data = await response.json();
-                const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                const jsonText = data.choices?.[0]?.message?.content;
 
-                if (!jsonText) throw new Error("Empty response from Gemini");
+                if (!jsonText) throw new Error("Empty response from Mistral");
 
                 const result = JSON.parse(jsonText);
 
                 // Hide overlay and update UI with AI response
                 document.getElementById('scan-overlay').style.display = 'none';
-                displayVibe(result.title, result.dna, result.roast);
+                displayVibe(result.title || result.Title, result.dna || result.DNA, result.roast || result.Roast);
 
             } catch (error) {
                 console.error("Gemini API failed:", error);
@@ -1036,104 +1035,105 @@
                 toast.style.transform = 'translateY(-20px)';
                 toast.style.opacity = '0';
             }, 3000);
-            // Background Generation Function
-            async function generateShareCanvas() {
-                if (window.isGeneratingShareFile) return;
-                window.isGeneratingShareFile = true;
-                window.preGeneratedShareFile = null;
+        }
 
-                const deletes = document.querySelectorAll('.delete-btn');
-                deletes.forEach(d => d.style.display = 'none');
-                const captureArea = document.getElementById('capture-area');
+        // Background Generation Function
+        async function generateShareCanvas() {
+            if (window.isGeneratingShareFile) return;
+            window.isGeneratingShareFile = true;
+            window.preGeneratedShareFile = null;
 
-                try {
-                    // Ensure layout is stable
-                    await new Promise(r => setTimeout(r, 200));
+            const deletes = document.querySelectorAll('.delete-btn');
+            deletes.forEach(d => d.style.display = 'none');
+            const captureArea = document.getElementById('capture-area');
 
-                    const canvas = await html2canvas(captureArea, {
-                        scale: 2,
-                        backgroundColor: '#166534',
-                        useCORS: true,
-                        logging: false,
-                        windowWidth: captureArea.scrollWidth,
-                        windowHeight: captureArea.scrollHeight
+            try {
+                // Ensure layout is stable
+                await new Promise(r => setTimeout(r, 200));
+
+                const canvas = await html2canvas(captureArea, {
+                    scale: 2,
+                    backgroundColor: '#166534',
+                    useCORS: true,
+                    logging: false,
+                    windowWidth: captureArea.scrollWidth,
+                    windowHeight: captureArea.scrollHeight
+                });
+
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                window.preGeneratedShareFile = new File([blob], 'NNPS_Vibe.png', { type: 'image/png' });
+                window.preGeneratedShareCanvas = canvas; // fallback
+
+            } catch (err) {
+                console.error("Background generation failed:", err);
+            } finally {
+                deletes.forEach(d => d.style.display = '');
+                window.isGeneratingShareFile = false;
+            }
+        }
+
+        // Optimized Native Share Function
+        async function shareImage(e) {
+            const itemCount = canvasBoard.querySelectorAll('.canvas-item:not(.teacher-stamp-container)').length;
+            if (itemCount === 0) {
+                showToast("Add some items before sharing!");
+                return;
+            }
+
+            const btn = e && e.target ? e.target.closest('button') : document.getElementById('export-btn');
+            const originalHTML = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.innerHTML = '⏳ Finishing...';
+                btn.disabled = true;
+            }
+
+            // Wait if still generating
+            if (window.isGeneratingShareFile) {
+                while (window.isGeneratingShareFile) {
+                    await new Promise(r => setTimeout(r, 100));
+                }
+            }
+
+            try {
+                if (!window.preGeneratedShareFile) {
+                    throw new Error("preGeneratedShareFile is missing");
+                }
+
+                const file = window.preGeneratedShareFile;
+
+                // Sync Native Share Trigger
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: 'My NNPS Vibe Checks Out',
+                        text: 'Lmaoo look at my official primary school diagnosis 😭 Nigerian teachers were something else!'
                     });
-
-                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-                    window.preGeneratedShareFile = new File([blob], 'NNPS_Vibe.png', { type: 'image/png' });
-                    window.preGeneratedShareCanvas = canvas; // fallback
-
-                } catch (err) {
-                    console.error("Background generation failed:", err);
-                } finally {
-                    deletes.forEach(d => d.style.display = '');
-                    window.isGeneratingShareFile = false;
+                } else {
+                    showToast("Share sheet not supported. Downloading instead!");
+                    if (window.preGeneratedShareCanvas) {
+                        fallbackDownload(window.preGeneratedShareCanvas);
+                    }
                 }
-            }
-
-            // Optimized Native Share Function
-            async function shareImage(e) {
-                const itemCount = canvasBoard.querySelectorAll('.canvas-item:not(.teacher-stamp-container)').length;
-                if (itemCount === 0) {
-                    showToast("Add some items before sharing!");
-                    return;
+            } catch (err) {
+                console.error("Export failed:", err);
+                if (err.name !== 'AbortError') {
+                    showToast("Share unavailable. Try taking a screenshot!");
                 }
-
-                const btn = e && e.target ? e.target.closest('button') : document.getElementById('export-btn');
-                const originalHTML = btn ? btn.innerHTML : '';
+            } finally {
                 if (btn) {
-                    btn.innerHTML = '⏳ Finishing...';
-                    btn.disabled = true;
-                }
-
-                // Wait if still generating
-                if (window.isGeneratingShareFile) {
-                    while (window.isGeneratingShareFile) {
-                        await new Promise(r => setTimeout(r, 100));
-                    }
-                }
-
-                try {
-                    if (!window.preGeneratedShareFile) {
-                        throw new Error("preGeneratedShareFile is missing");
-                    }
-
-                    const file = window.preGeneratedShareFile;
-
-                    // Sync Native Share Trigger
-                    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                        await navigator.share({
-                            files: [file],
-                            title: 'My NNPS Vibe Checks Out',
-                            text: 'Lmaoo look at my official primary school diagnosis 😭 Nigerian teachers were something else!'
-                        });
-                    } else {
-                        showToast("Share sheet not supported. Downloading instead!");
-                        if (window.preGeneratedShareCanvas) {
-                            fallbackDownload(window.preGeneratedShareCanvas);
-                        }
-                    }
-                } catch (err) {
-                    console.error("Export failed:", err);
-                    if (err.name !== 'AbortError') {
-                        showToast("Share unavailable. Try taking a screenshot!");
-                    }
-                } finally {
-                    if (btn) {
-                        btn.innerHTML = originalHTML;
-                        btn.disabled = false;
-                    }
+                    btn.innerHTML = originalHTML;
+                    btn.disabled = false;
                 }
             }
+        }
 
-            function fallbackDownload(canvas) {
-                showToast("Saving image to device...");
-                const image = canvas.toDataURL("image/png", 1.0);
-                const link = document.createElement('a');
-                link.download = 'My_NNPS_Vibe.png';
-                link.href = image;
-                link.click();
-            }
+        function fallbackDownload(canvas) {
+            showToast("Saving image to device...");
+            const image = canvas.toDataURL("image/png", 1.0);
+            const link = document.createElement('a');
+            link.download = 'My_NNPS_Vibe.png';
+            link.href = image;
+            link.click();
         }
     </script>
 </body>
