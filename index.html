@@ -503,7 +503,7 @@
                         <path d="m3 8 4-4 4 4" />
                         <path d="M7 4v16" />
                     </svg>
-                    Let the Roast Begin
+                    Get My Diagnosis
                 </button>
             </div>
         </div>
@@ -511,7 +511,7 @@
 
     <script type="module">
         // Inject Vite env variable into the global scope
-        window.MISTRAL_API_KEY = import.meta.env.VITE_MISTRAL_API_KEY || "";
+        window.MISTRAL_API_KEY = "%VITE_MISTRAL_API_KEY%";
     </script>
     <script>
         const ITEM_LIMIT = 15;
@@ -776,6 +776,7 @@
         }
 
         function submitQuizAndAnalyze() {
+            console.log("Submit clicked. Seating:", document.getElementById('user-seat').value);
             const seat = document.getElementById('user-seat').value;
             const memory = document.getElementById('user-memory').value.trim();
 
@@ -861,7 +862,7 @@
                 displayVibe(result.title || result.Title, result.dna || result.DNA, result.roast || result.Roast);
 
             } catch (error) {
-                console.error("Gemini API failed:", error);
+                console.error("Mistral API failed:", error);
                 if (retryCount < 5) {
                     const backoff = Math.pow(2, retryCount) * 1000;
                     setTimeout(() => fetchGeminiRoast(seat, memory, retryCount + 1), backoff);
