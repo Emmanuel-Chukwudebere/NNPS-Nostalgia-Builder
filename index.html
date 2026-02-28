@@ -821,12 +821,14 @@
                 - Seating position: ${seat}
                 - Favorite memory/frequent offense: ${memory || "None provided"}
 
-                Based on this, provide a funny, teasing, but lighthearted analysis with Nigerian flavor. Do not be overly harsh or use offensive words.
+                Based on this, provide a funny, teasing, but lighthearted analysis with Nigerian flavor. 
+                STRICT RULE: Do NOT use Pidgin English. Use ONLY Standard English with a Nigerian nostalgic flavor. No 'Abeg', 'No go', 'Sabi', etc. 
+                Keep it formal but funny, like a proper Nigerian school Principal writing a report card.
                 You MUST respond ONLY with a valid JSON object. Do NOT include markdown formatting or backticks.
                 The JSON object must have exactly these three keys:
                 "title": A hilarious, uppercase persona title (e.g., THE NOISE MAKER, THE DAYDREAMER)
                 "dna": A vibe DNA string with percentages (e.g., 70% PLAYFUL • 30% AJEBUTTER)
-                "roast": A 2-3 sentence funny and nostalgic analysis written in Nigerian English/Slang. Address them directly as 'You'.
+                "roast": A 2-3 sentence funny and nostalgic analysis in Standard English. Address them directly as 'You'.
             `;
 
             const payload = {
@@ -891,6 +893,8 @@
 
             document.getElementById('p-title').innerText = title;
             document.getElementById('p-dna').innerText = "DNA: " + dnaTextFormatter(dna);
+            document.getElementById('p-roast').innerText = `"${roast}"`;
+
             document.getElementById('p-roast').innerText = `"${roast}"`;
 
             const wrapper = document.getElementById('persona-wrapper');
@@ -1044,31 +1048,29 @@
             window.isGeneratingShareFile = true;
             window.preGeneratedShareFile = null;
 
-            const deletes = document.querySelectorAll('.delete-btn');
-            deletes.forEach(d => d.style.display = 'none');
-            const captureArea = document.getElementById('capture-area');
+            // We target the modal banner (the card) specifically now
+            const resultsCard = document.querySelector('.persona-banner');
 
             try {
                 // Ensure layout is stable
                 await new Promise(r => setTimeout(r, 200));
 
-                const canvas = await html2canvas(captureArea, {
+                const canvas = await html2canvas(resultsCard, {
                     scale: 2,
-                    backgroundColor: '#166534',
+                    backgroundColor: '#1f2937', // Dark gray/Blue to match theme
                     useCORS: true,
                     logging: false,
-                    windowWidth: captureArea.scrollWidth,
-                    windowHeight: captureArea.scrollHeight
+                    windowWidth: resultsCard.scrollWidth,
+                    windowHeight: resultsCard.scrollHeight
                 });
 
                 const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-                window.preGeneratedShareFile = new File([blob], 'NNPS_Vibe.png', { type: 'image/png' });
+                window.preGeneratedShareFile = new File([blob], 'NNPS_Vibe_Diagnosis.png', { type: 'image/png' });
                 window.preGeneratedShareCanvas = canvas; // fallback
 
             } catch (err) {
                 console.error("Background generation failed:", err);
             } finally {
-                deletes.forEach(d => d.style.display = '');
                 window.isGeneratingShareFile = false;
             }
         }
