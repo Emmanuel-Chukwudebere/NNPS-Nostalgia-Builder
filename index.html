@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NNPS Calabar Nostalgia Board</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Space+Grotesk:wght@400;600;700&family=Russo+One&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: #f4f4f5;
+            overscroll-behavior-y: contain; 
+        }
+        
+        .chalkboard {
+            background-color: #166534; /* Emerald 800 */
+            background-image: 
+                radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px),
+                radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.6);
+        }
+
+        .wood-frame {
+            border: 16px solid #5a3219; 
+            border-radius: 12px;
+            box-shadow: inset 0 0 0 4px #3e1f0b, 0 10px 25px rgba(0,0,0,0.3); 
+        }
+
+        .chalk-text {
+            font-family: 'Caveat', cursive;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+        }
+
+        /* The Persona Result Banner */
+        .persona-banner {
+            font-family: 'Russo One', sans-serif;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            width: 90%;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.85);
+            border: 4px dashed #fbbf24;
+            padding: 20px;
+            border-radius: 12px;
+            color: white;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .persona-banner.active {
+            transform: translate(-50%, -50%) scale(1) rotate(-2deg);
+            opacity: 1;
+        }
+
+        .persona-title {
+            color: #fbbf24; /* Amber 400 */
+            font-size: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            line-height: 1.1;
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 0px #b45309;
+        }
+
+        .persona-desc {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            color: #e5e7eb;
+        }
+
+        .teacher-stamp {
+            font-family: 'Times New Roman', serif;
+            color: #dc2626; 
+            border: 4px solid #dc2626;
+            padding: 8px 16px;
+            text-transform: uppercase;
+            font-weight: bold;
+            font-size: 1.25rem;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.9);
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            pointer-events: none; 
+        }
+
+        .canvas-item {
+            position: absolute;
+            cursor: grab;
+            user-select: none;
+            touch-action: none; 
+            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.4));
+            transition: transform 0.1s;
+        }
+        
+        .canvas-item:active {
+            cursor: grabbing;
+            transform: scale(1.1);
+        }
+
+        .emoji-art {
+            font-size: 3.5rem;
+            line-height: 1;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Pulse animation for the main action button */
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+        .btn-pulse { animation: pulse-ring 2s infinite; }
+    </style>
+</head>
+<body class="h-screen flex flex-col md:flex-row overflow-hidden">
+
+    <!-- Sidebar / Inventory Tray -->
+    <div class="w-full md:w-80 bg-white shadow-xl flex flex-col z-20 h-[35%] md:h-full border-b md:border-b-0 md:border-r border-gray-200 order-2 md:order-1">
+        <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-bold text-gray-800">NNPS Inventory</h1>
+                <p class="text-xs text-gray-500 mt-1">Add items to calculate your vibe.</p>
+            </div>
+            <div class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded-full" id="item-counter">0/8</div>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-4 no-scrollbar pb-20 md:pb-4">
+            <div id="inventory-grid" class="grid grid-cols-4 md:grid-cols-2 gap-3">
+                <!-- Items injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Canvas Area -->
+    <div class="flex-1 flex flex-col items-center justify-start md:justify-center p-4 md:p-8 bg-gray-100 relative order-1 md:order-2 h-[65%] md:h-full">
+        
+        <div class="text-center mb-2 md:mb-6 mt-2 md:mt-0">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">Who Were You In Primary School?</h2>
+            <p class="text-gray-500 text-xs md:text-base">1. Drag items to desk &nbsp; 2. Calculate Vibe &nbsp; 3. Share to Group</p>
+        </div>
+
+        <!-- The Canvas Container -->
+        <div class="w-full max-w-2xl aspect-[4/3] md:aspect-video wood-frame relative overflow-hidden chalkboard shadow-2xl" id="capture-area">
+            
+            <!-- Default Text -->
+            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-50" id="empty-state">
+                <span class="chalk-text text-3xl md:text-5xl text-center px-4">Drag your memories here...</span>
+                <span class="chalk-text text-xl md:text-2xl mt-4">Let's see who you really were.</span>
+            </div>
+            
+            <!-- Items drop here -->
+            <div id="canvas-board" class="absolute inset-0 w-full h-full"></div>
+
+            <!-- The Persona Result Display -->
+            <div id="persona-result" class="persona-banner">
+                <div class="text-xs text-gray-400 mb-1 uppercase tracking-widest font-sans">Official NNPS Diagnosis</div>
+                <div id="p-title" class="persona-title">THE NOISE MAKER</div>
+                <div id="p-desc" class="persona-desc">Your name was permanent on the list. You probably chopped cane today.</div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="mt-4 md:mt-6 flex flex-wrap justify-center gap-2 md:gap-3 w-full max-w-2xl">
+            <!-- New Primary Action Button -->
+            <button onclick="calculateVibe()" class="w-full md:w-auto px-6 py-3 bg-amber-500 text-white font-black rounded-lg hover:bg-amber-600 transition active:scale-95 shadow-md flex items-center justify-center gap-2 btn-pulse text-lg" id="vibe-btn">
+                🔍 Analyze My Vibe
+            </button>
+
+            <button onclick="addStamp()" class="flex-1 md:flex-none px-3 py-2 md:px-4 md:py-3 bg-white text-red-700 font-semibold rounded-lg border border-red-200 hover:bg-red-50 transition active:scale-95 flex items-center justify-center gap-2 text-sm md:text-base">
+                Teacher's Stamp
+            </button>
+            <button onclick="clearBoard()" class="px-3 py-2 md:px-4 md:py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition active:scale-95 text-sm md:text-base">
+                Clear
+            </button>
+            <button onclick="exportImage()" id="export-btn" class="flex-1 md:flex-none px-4 py-2 md:px-6 md:py-3 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 shadow-md transition active:scale-95 flex items-center justify-center gap-2 text-sm md:text-base opacity-50 cursor-not-allowed">
+                📸 Save Image
+            </button>
+        </div>
+
+        <div id="toast" class="absolute top-4 bg-gray-800 text-white px-6 py-3 rounded-full shadow-lg transform -translate-y-20 opacity-0 transition-all duration-300 z-50 text-sm md:text-base font-bold text-center">
+            Notification
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Data Inventory with "Tags" for scoring ---
+        // Tags: 'smart', 'trouble', 'foodie', 'ajebutter' (rich), 'pako' (trenches), 'senior'
+        const inventoryItems = [
+            { id: 'mathset', icon: '📏', label: 'Math Set', tags: ['smart'] },
+            { id: 'book', icon: '📓', label: '20 Leaves', tags: ['smart', 'pako'] },
+            { id: 'noisemakers', icon: '📝', label: 'Noise Makers', tags: ['trouble'] },
+            { id: 'cane', icon: '🦯', label: 'Koboko', tags: ['trouble'] },
+            { id: 'frog', icon: '🐸', label: 'Frog Jump', tags: ['trouble', 'pako'] },
+            { id: 'bobo', icon: '🍼', label: 'Bobo Juice', tags: ['ajebutter', 'foodie'] },
+            { id: 'viju', icon: '🥛', label: 'Viju Milk', tags: ['ajebutter', 'foodie'] },
+            { id: 'indomie', icon: '🍜', label: 'Dry Indomie', tags: ['pako', 'foodie', 'trouble'] },
+            { id: 'gala', icon: '🥖', label: 'Gala', tags: ['foodie'] },
+            { id: 'zobo', icon: '🧃', label: 'Ice Water', tags: ['pako', 'foodie'] },
+            { id: 'cabin', icon: '🍪', label: 'Cabin Biscuit', tags: ['pako', 'foodie'] },
+            { id: 'chocomilo', icon: '🍫', label: 'Choco Milo', tags: ['ajebutter'] },
+            { id: 'basic5', icon: '🏃🏾‍♂️', label: 'Left Basic 5', tags: ['ajebutter', 'smart'] },
+            { id: 'basic6', icon: '🎓', label: 'Basic 6 Vet', tags: ['senior'] },
+            { id: 'bell', icon: '🔔', label: 'Assembly Bell', tags: ['senior'] },
+            { id: 'uniform', icon: '👕', label: 'Navy Uniform', tags: ['senior'] },
+            { id: 'eleganza', icon: '🖊️', label: 'Eleganza', tags: ['neutral'] },
+            { id: 'bag', icon: '🎒', label: 'School Bag', tags: ['neutral'] },
+            { id: 'socks', icon: '🧦', label: 'White Socks', tags: ['neutral'] },
+            { id: 'sandals', icon: '👞', label: 'Cortina', tags: ['neutral'] }
+        ];
+
+        // --- 2. The Personas Database ---
+        const personas = {
+            trouble: { title: "The Unrepentant Noise Maker", desc: "Your name was permanent on the list. You definitely chopped cane today." },
+            foodie: { title: "The Break-Time Scavenger", desc: "You didn't come to read, you came to eat. 'Who is buying Gala?'" },
+            ajebutter: { title: "The 'Ajebutter' / Chief", desc: "Drinking Bobo while the rest of us drank N10 Ice Water. Mummy's pet!" },
+            smart: { title: "The I.T.K. (I Too Know)", desc: "Always reminding the teacher about homework. We still haven't forgiven you." },
+            pako: { title: "The Trenches Survivor", desc: "You saw shege but you survived. Dry indomie and tap water was your portion." },
+            senior: { title: "The Wicked Senior", desc: "Basic 6 Veteran. You made juniors do frog jumps for no logical reason." },
+            neutral: { title: "The 'I Just Came to Play'", desc: "You were just existing, dodging trouble and waiting for the bell to ring." }
+        };
+
+        const stamps = [
+            "A bright boy but plays too much.",
+            "Needs to sit up.",
+            "Easily distracted.",
+            "See me after class!",
+            "Tear a sheet of paper!"
+        ];
+
+        // --- 3. Initialize App ---
+        const inventoryGrid = document.getElementById('inventory-grid');
+        const canvasBoard = document.getElementById('canvas-board');
+        const emptyState = document.getElementById('empty-state');
+        const exportBtn = document.getElementById('export-btn');
+        let zIndexCounter = 10;
+        let selectedTags = []; // Store tags of added items
+
+        // Render Inventory
+        inventoryItems.forEach(item => {
+            const btn = document.createElement('button');
+            btn.className = 'flex flex-col items-center justify-center p-2 md:p-3 bg-white border border-gray-100 rounded-xl hover:bg-emerald-50 hover:border-emerald-200 transition active:scale-95 shadow-sm';
+            btn.onclick = () => addItemToCanvas(item);
+            btn.innerHTML = `
+                <span class="text-3xl md:text-4xl mb-1">${item.icon}</span>
+                <span class="text-[10px] md:text-xs font-semibold text-gray-600 text-center leading-tight">${item.label}</span>
+            `;
+            inventoryGrid.appendChild(btn);
+        });
+
+        // --- 4. Canvas Logic ---
+        function updateCounter() {
+            const count = canvasBoard.querySelectorAll('.canvas-item:not(.teacher-stamp-container)').length;
+            document.getElementById('item-counter').innerText = `${count}/8`;
+            
+            // Hide persona result if they start changing the board
+            document.getElementById('persona-result').classList.remove('active');
+            
+            // Enable/disable export based on items
+            if(count > 0) {
+                exportBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                exportBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function addItemToCanvas(itemData) {
+            if (canvasBoard.querySelectorAll('.canvas-item:not(.teacher-stamp-container)').length >= 8) {
+                showToast("Desk is full! Calculate your vibe or remove items.");
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            selectedTags.push(...itemData.tags); // Add to our logic pool
+
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'canvas-item flex flex-col items-center justify-center';
+            itemDiv.dataset.id = itemData.id; // Store ID to remove tags later
+            
+            const rot = (Math.random() * 30) - 15;
+            itemDiv.style.transform = `rotate(${rot}deg)`;
+            itemDiv.dataset.baseRotation = rot;
+
+            itemDiv.innerHTML = `
+                <div class="emoji-art drop-shadow-lg">${itemData.icon}</div>
+                <div class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold cursor-pointer opacity-0 hover:opacity-100 transition shadow delete-btn" style="transform: rotate(${-rot}deg)">✕</div>
+            `;
+
+            const offsetX = (Math.random() * 60) - 30;
+            const offsetY = (Math.random() * 60) - 30;
+            
+            itemDiv.style.left = `calc(50% - 30px + ${offsetX}px)`;
+            itemDiv.style.top = `calc(50% - 30px + ${offsetY}px)`;
+            itemDiv.style.zIndex = zIndexCounter++;
+
+            // Delete functionality
+            const deleteBtn = itemDiv.querySelector('.delete-btn');
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                
+                // Remove tags from the pool
+                const itemObj = inventoryItems.find(i => i.id === itemData.id);
+                itemObj.tags.forEach(tag => {
+                    const index = selectedTags.indexOf(tag);
+                    if (index > -1) selectedTags.splice(index, 1);
+                });
+
+                itemDiv.remove();
+                updateCounter();
+                if (canvasBoard.children.length === 0 || 
+                    (canvasBoard.children.length === 1 && canvasBoard.querySelector('.teacher-stamp-container'))) {
+                    emptyState.style.display = 'flex';
+                }
+            };
+
+            itemDiv.addEventListener('touchstart', () => {
+                const allDeletes = document.querySelectorAll('.delete-btn');
+                allDeletes.forEach(btn => btn.style.opacity = '0');
+                deleteBtn.style.opacity = '1';
+                setTimeout(() => { deleteBtn.style.opacity = '0'; }, 3000);
+            }, {passive: true});
+
+            canvasBoard.appendChild(itemDiv);
+            makeDraggable(itemDiv);
+            updateCounter();
+        }
+
+        function makeDraggable(element) {
+            let isDragging = false;
+            let startX, startY, initialLeft, initialTop;
+
+            const startDrag = (e) => {
+                if (e.target.classList.contains('delete-btn')) return;
+                
+                // Hide persona result when dragging starts
+                document.getElementById('persona-result').classList.remove('active');
+
+                isDragging = true;
+                element.style.zIndex = zIndexCounter++;
+                
+                const baseRot = element.dataset.baseRotation;
+                element.style.transform = `rotate(${baseRot}deg) scale(1.15)`;
+
+                const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+
+                startX = clientX;
+                startY = clientY;
+                
+                initialLeft = parseFloat(element.style.left) || 0;
+                initialTop = parseFloat(element.style.top) || 0;
+                
+                if (element.style.left.includes('calc') || element.style.left.includes('%')) {
+                     const rect = element.getBoundingClientRect();
+                     const parentRect = canvasBoard.getBoundingClientRect();
+                     initialLeft = rect.left - parentRect.left;
+                     initialTop = rect.top - parentRect.top;
+                     element.style.left = `${initialLeft}px`;
+                     element.style.top = `${initialTop}px`;
+                }
+
+                if (e.type.includes('touch')) e.preventDefault();
+            };
+
+            const doDrag = (e) => {
+                if (!isDragging) return;
+                const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+                element.style.left = `${initialLeft + (clientX - startX)}px`;
+                element.style.top = `${initialTop + (clientY - startY)}px`;
+                if (e.type.includes('touch')) e.preventDefault();
+            };
+
+            const stopDrag = () => {
+                if (!isDragging) return;
+                isDragging = false;
+                const baseRot = element.dataset.baseRotation;
+                element.style.transform = `rotate(${baseRot}deg) scale(1)`;
+            };
+
+            element.addEventListener('mousedown', startDrag);
+            document.addEventListener('mousemove', doDrag);
+            document.addEventListener('mouseup', stopDrag);
+            element.addEventListener('touchstart', startDrag, { passive: false });
+            document.addEventListener('touchmove', doDrag, { passive: false });
+            document.addEventListener('touchend', stopDrag);
+        }
+
+        // --- 5. The Core Loop: Calculate Vibe ---
+        function calculateVibe() {
+            const itemCount = canvasBoard.querySelectorAll('.canvas-item:not(.teacher-stamp-container)').length;
+            
+            if (itemCount < 3) {
+                showToast("Add at least 3 items to calculate your true vibe!");
+                return;
+            }
+
+            // Tally up the tags
+            const tally = {};
+            selectedTags.forEach(tag => {
+                if (tag !== 'neutral') {
+                    tally[tag] = (tally[tag] || 0) + 1;
+                }
+            });
+
+            // Find the highest scoring trait
+            let topTrait = 'neutral';
+            let maxCount = 0;
+
+            for (const [tag, count] of Object.entries(tally)) {
+                if (count > maxCount) {
+                    maxCount = count;
+                    topTrait = tag;
+                }
+            }
+
+            // Fallback to neutral if tie or no strong traits
+            if (maxCount === 0) topTrait = 'neutral';
+
+            // Show the result
+            const resultData = personas[topTrait];
+            document.getElementById('p-title').innerText = resultData.title;
+            document.getElementById('p-desc').innerText = resultData.desc;
+            
+            const banner = document.getElementById('persona-result');
+            banner.style.zIndex = zIndexCounter + 10; // Ensure it's always on top
+            banner.classList.add('active');
+
+            // Optional: Auto-trigger save excitement
+            showToast("Vibe calculated! Save and share to the group.");
+            
+            // Bounce the save button
+            exportBtn.classList.add('scale-110', 'bg-emerald-500');
+            setTimeout(() => exportBtn.classList.remove('scale-110', 'bg-emerald-500'), 500);
+        }
+
+        // --- 6. Utilities ---
+        let currentStampIndex = 0;
+        
+        function addStamp() {
+            if (canvasBoard.children.length === 0) emptyState.style.display = 'none';
+            
+            const existingStamp = document.querySelector('.teacher-stamp-container');
+            if (existingStamp) existingStamp.remove();
+
+            const stampContainer = document.createElement('div');
+            stampContainer.className = 'canvas-item teacher-stamp-container';
+            const rot = (Math.random() * 20) - 30; 
+            stampContainer.style.transform = `rotate(${rot}deg)`;
+            stampContainer.dataset.baseRotation = rot;
+            stampContainer.innerHTML = `<div class="teacher-stamp">${stamps[currentStampIndex]}</div>`;
+            
+            currentStampIndex = (currentStampIndex + 1) % stamps.length;
+            stampContainer.style.left = '5%';
+            stampContainer.style.top = '75%';
+            stampContainer.style.zIndex = zIndexCounter++;
+
+            canvasBoard.appendChild(stampContainer);
+            makeDraggable(stampContainer);
+        }
+
+        function clearBoard() {
+            canvasBoard.innerHTML = '';
+            document.getElementById('persona-result').classList.remove('active');
+            emptyState.style.display = 'flex';
+            currentStampIndex = 0;
+            selectedTags = [];
+            updateCounter();
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.style.transform = 'translateY(0)';
+            toast.style.opacity = '1';
+            setTimeout(() => {
+                toast.style.transform = 'translateY(-20px)';
+                toast.style.opacity = '0';
+            }, 3000);
+        }
+
+        async function exportImage() {
+            const itemCount = canvasBoard.querySelectorAll('.canvas-item:not(.teacher-stamp-container)').length;
+            if (itemCount === 0) {
+                showToast("Add some items before saving!");
+                return;
+            }
+
+            const btn = document.getElementById('export-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '📸 Capturing...';
+            btn.disabled = true;
+
+            const deletes = document.querySelectorAll('.delete-btn');
+            deletes.forEach(d => d.style.display = 'none');
+
+            const captureArea = document.getElementById('capture-area');
+
+            try {
+                const canvas = await html2canvas(captureArea, {
+                    scale: 2, 
+                    backgroundColor: null, 
+                    logging: false
+                });
+
+                const image = canvas.toDataURL("image/png", 1.0);
+                const link = document.createElement('a');
+                link.download = 'My_NNPS_Vibe.png';
+                link.href = image;
+                link.click();
+                
+                showToast("Image Saved! Paste it in the group chat.");
+            } catch (err) {
+                console.error("Export failed:", err);
+                alert("Couldn't save image. Try taking a screenshot!");
+            } finally {
+                deletes.forEach(d => d.style.display = 'flex');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
