@@ -1,39 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NNPS Calabar Nostalgia Board</title>
+    <!-- Vercel Web Analytics -->
+    <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Space+Grotesk:wght@400;600;700&family=Russo+One&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Space+Grotesk:wght@400;600;700&family=Russo+One&display=swap"
+        rel="stylesheet">
     <style>
         body {
             font-family: 'Space Grotesk', sans-serif;
             background-color: #f4f4f5;
-            overscroll-behavior-y: contain; 
+            overscroll-behavior-y: contain;
         }
-        
+
         .chalkboard {
-            background-color: #166534; /* Emerald 800 */
-            background-image: 
-                radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px),
-                radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+            background-color: #166534;
+            /* Emerald 800 */
+            background-image:
+                radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
             background-size: 20px 20px;
             background-position: 0 0, 10px 10px;
-            box-shadow: inset 0 0 50px rgba(0,0,0,0.6);
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.6);
         }
 
         .wood-frame {
-            border: 16px solid #5a3219; 
+            border: 16px solid #5a3219;
             border-radius: 12px;
-            box-shadow: inset 0 0 0 4px #3e1f0b, 0 10px 25px rgba(0,0,0,0.3); 
+            box-shadow: inset 0 0 0 4px #3e1f0b, 0 10px 25px rgba(0, 0, 0, 0.3);
         }
 
         .chalk-text {
             font-family: 'Caveat', cursive;
             color: rgba(255, 255, 255, 0.9);
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
         }
 
         /* The Persona Result Banner */
@@ -54,7 +63,7 @@
             opacity: 0;
             pointer-events: none;
             transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
         .persona-banner.active {
@@ -63,7 +72,8 @@
         }
 
         .persona-title {
-            color: #fbbf24; /* Amber 400 */
+            color: #fbbf24;
+            /* Amber 400 */
             font-size: 2rem;
             text-transform: uppercase;
             letter-spacing: 2px;
@@ -80,27 +90,27 @@
 
         .teacher-stamp {
             font-family: 'Times New Roman', serif;
-            color: #dc2626; 
+            color: #dc2626;
             border: 4px solid #dc2626;
             padding: 8px 16px;
             text-transform: uppercase;
             font-weight: bold;
             font-size: 1.25rem;
             border-radius: 4px;
-            background: rgba(255,255,255,0.9);
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-            pointer-events: none; 
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+            pointer-events: none;
         }
 
         .canvas-item {
             position: absolute;
             cursor: grab;
             user-select: none;
-            touch-action: none; 
-            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.4));
+            touch-action: none;
+            filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.4));
             transition: transform 0.1s;
         }
-        
+
         .canvas-item:active {
             cursor: grabbing;
             transform: scale(1.1);
@@ -111,22 +121,41 @@
             line-height: 1;
         }
 
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
         /* Pulse animation for the main action button */
         @keyframes pulse-ring {
-            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+            0% {
+                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+            }
         }
-        .btn-pulse { animation: pulse-ring 2s infinite; }
+
+        .btn-pulse {
+            animation: pulse-ring 2s infinite;
+        }
     </style>
 </head>
+
 <body class="h-screen flex flex-col md:flex-row overflow-hidden">
 
     <!-- Sidebar / Inventory Tray -->
-    <div class="w-full md:w-80 bg-white shadow-xl flex flex-col z-20 h-[35%] md:h-full border-b md:border-b-0 md:border-r border-gray-200 order-2 md:order-1">
+    <div
+        class="w-full md:w-80 bg-white shadow-xl flex flex-col z-20 h-[35%] md:h-full border-b md:border-b-0 md:border-r border-gray-200 order-2 md:order-1">
         <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
             <div>
                 <h1 class="text-xl font-bold text-gray-800">NNPS Inventory</h1>
@@ -134,7 +163,7 @@
             </div>
             <div class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded-full" id="item-counter">0/8</div>
         </div>
-        
+
         <div class="flex-1 overflow-y-auto p-4 no-scrollbar pb-20 md:pb-4">
             <div id="inventory-grid" class="grid grid-cols-4 md:grid-cols-2 gap-3">
                 <!-- Items injected via JS -->
@@ -143,52 +172,64 @@
     </div>
 
     <!-- Main Canvas Area -->
-    <div class="flex-1 flex flex-col items-center justify-start md:justify-center p-4 md:p-8 bg-gray-100 relative order-1 md:order-2 h-[65%] md:h-full">
-        
+    <div
+        class="flex-1 flex flex-col items-center justify-start md:justify-center p-4 md:p-8 bg-gray-100 relative order-1 md:order-2 h-[65%] md:h-full">
+
         <div class="text-center mb-2 md:mb-6 mt-2 md:mt-0">
             <h2 class="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">Who Were You In Primary School?</h2>
-            <p class="text-gray-500 text-xs md:text-base">1. Drag items to desk &nbsp; 2. Calculate Vibe &nbsp; 3. Share to Group</p>
+            <p class="text-gray-500 text-xs md:text-base">1. Drag items to desk &nbsp; 2. Calculate Vibe &nbsp; 3. Share
+                to Group</p>
         </div>
 
         <!-- The Canvas Container -->
-        <div class="w-full max-w-2xl aspect-[4/3] md:aspect-video wood-frame relative overflow-hidden chalkboard shadow-2xl" id="capture-area">
-            
+        <div class="w-full max-w-2xl aspect-[4/3] md:aspect-video wood-frame relative overflow-hidden chalkboard shadow-2xl"
+            id="capture-area">
+
             <!-- Default Text -->
-            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-50" id="empty-state">
+            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-50"
+                id="empty-state">
                 <span class="chalk-text text-3xl md:text-5xl text-center px-4">Drag your memories here...</span>
                 <span class="chalk-text text-xl md:text-2xl mt-4">Let's see who you really were.</span>
             </div>
-            
+
             <!-- Items drop here -->
             <div id="canvas-board" class="absolute inset-0 w-full h-full"></div>
 
             <!-- The Persona Result Display -->
             <div id="persona-result" class="persona-banner">
-                <div class="text-xs text-gray-400 mb-1 uppercase tracking-widest font-sans">Official NNPS Diagnosis</div>
+                <div class="text-xs text-gray-400 mb-1 uppercase tracking-widest font-sans">Official NNPS Diagnosis
+                </div>
                 <div id="p-title" class="persona-title">THE NOISE MAKER</div>
-                <div id="p-desc" class="persona-desc">Your name was permanent on the list. You probably chopped cane today.</div>
+                <div id="p-desc" class="persona-desc">Your name was permanent on the list. You probably chopped cane
+                    today.</div>
             </div>
         </div>
 
         <!-- Controls -->
         <div class="mt-4 md:mt-6 flex flex-wrap justify-center gap-2 md:gap-3 w-full max-w-2xl">
             <!-- New Primary Action Button -->
-            <button onclick="calculateVibe()" class="w-full md:w-auto px-6 py-3 bg-amber-500 text-white font-black rounded-lg hover:bg-amber-600 transition active:scale-95 shadow-md flex items-center justify-center gap-2 btn-pulse text-lg" id="vibe-btn">
+            <button onclick="calculateVibe()"
+                class="w-full md:w-auto px-6 py-3 bg-amber-500 text-white font-black rounded-lg hover:bg-amber-600 transition active:scale-95 shadow-md flex items-center justify-center gap-2 btn-pulse text-lg"
+                id="vibe-btn">
                 🔍 Analyze My Vibe
             </button>
 
-            <button onclick="addStamp()" class="flex-1 md:flex-none px-3 py-2 md:px-4 md:py-3 bg-white text-red-700 font-semibold rounded-lg border border-red-200 hover:bg-red-50 transition active:scale-95 flex items-center justify-center gap-2 text-sm md:text-base">
+            <button onclick="addStamp()"
+                class="flex-1 md:flex-none px-3 py-2 md:px-4 md:py-3 bg-white text-red-700 font-semibold rounded-lg border border-red-200 hover:bg-red-50 transition active:scale-95 flex items-center justify-center gap-2 text-sm md:text-base">
                 Teacher's Stamp
             </button>
-            <button onclick="clearBoard()" class="px-3 py-2 md:px-4 md:py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition active:scale-95 text-sm md:text-base">
+            <button onclick="clearBoard()"
+                class="px-3 py-2 md:px-4 md:py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition active:scale-95 text-sm md:text-base">
                 Clear
             </button>
-            <button onclick="exportImage()" id="export-btn" class="flex-1 md:flex-none px-4 py-2 md:px-6 md:py-3 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 shadow-md transition active:scale-95 flex items-center justify-center gap-2 text-sm md:text-base opacity-50 cursor-not-allowed">
+            <button onclick="exportImage()" id="export-btn"
+                class="flex-1 md:flex-none px-4 py-2 md:px-6 md:py-3 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 shadow-md transition active:scale-95 flex items-center justify-center gap-2 text-sm md:text-base opacity-50 cursor-not-allowed">
                 📸 Save Image
             </button>
         </div>
 
-        <div id="toast" class="absolute top-4 bg-gray-800 text-white px-6 py-3 rounded-full shadow-lg transform -translate-y-20 opacity-0 transition-all duration-300 z-50 text-sm md:text-base font-bold text-center">
+        <div id="toast"
+            class="absolute top-4 bg-gray-800 text-white px-6 py-3 rounded-full shadow-lg transform -translate-y-20 opacity-0 transition-all duration-300 z-50 text-sm md:text-base font-bold text-center">
             Notification
         </div>
     </div>
@@ -262,12 +303,12 @@
         function updateCounter() {
             const count = canvasBoard.querySelectorAll('.canvas-item:not(.teacher-stamp-container)').length;
             document.getElementById('item-counter').innerText = `${count}/8`;
-            
+
             // Hide persona result if they start changing the board
             document.getElementById('persona-result').classList.remove('active');
-            
+
             // Enable/disable export based on items
-            if(count > 0) {
+            if (count > 0) {
                 exportBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             } else {
                 exportBtn.classList.add('opacity-50', 'cursor-not-allowed');
@@ -286,7 +327,7 @@
             const itemDiv = document.createElement('div');
             itemDiv.className = 'canvas-item flex flex-col items-center justify-center';
             itemDiv.dataset.id = itemData.id; // Store ID to remove tags later
-            
+
             const rot = (Math.random() * 30) - 15;
             itemDiv.style.transform = `rotate(${rot}deg)`;
             itemDiv.dataset.baseRotation = rot;
@@ -298,7 +339,7 @@
 
             const offsetX = (Math.random() * 60) - 30;
             const offsetY = (Math.random() * 60) - 30;
-            
+
             itemDiv.style.left = `calc(50% - 30px + ${offsetX}px)`;
             itemDiv.style.top = `calc(50% - 30px + ${offsetY}px)`;
             itemDiv.style.zIndex = zIndexCounter++;
@@ -307,7 +348,7 @@
             const deleteBtn = itemDiv.querySelector('.delete-btn');
             deleteBtn.onclick = (e) => {
                 e.stopPropagation();
-                
+
                 // Remove tags from the pool
                 const itemObj = inventoryItems.find(i => i.id === itemData.id);
                 itemObj.tags.forEach(tag => {
@@ -317,7 +358,7 @@
 
                 itemDiv.remove();
                 updateCounter();
-                if (canvasBoard.children.length === 0 || 
+                if (canvasBoard.children.length === 0 ||
                     (canvasBoard.children.length === 1 && canvasBoard.querySelector('.teacher-stamp-container'))) {
                     emptyState.style.display = 'flex';
                 }
@@ -328,7 +369,7 @@
                 allDeletes.forEach(btn => btn.style.opacity = '0');
                 deleteBtn.style.opacity = '1';
                 setTimeout(() => { deleteBtn.style.opacity = '0'; }, 3000);
-            }, {passive: true});
+            }, { passive: true });
 
             canvasBoard.appendChild(itemDiv);
             makeDraggable(itemDiv);
@@ -341,13 +382,13 @@
 
             const startDrag = (e) => {
                 if (e.target.classList.contains('delete-btn')) return;
-                
+
                 // Hide persona result when dragging starts
                 document.getElementById('persona-result').classList.remove('active');
 
                 isDragging = true;
                 element.style.zIndex = zIndexCounter++;
-                
+
                 const baseRot = element.dataset.baseRotation;
                 element.style.transform = `rotate(${baseRot}deg) scale(1.15)`;
 
@@ -356,17 +397,17 @@
 
                 startX = clientX;
                 startY = clientY;
-                
+
                 initialLeft = parseFloat(element.style.left) || 0;
                 initialTop = parseFloat(element.style.top) || 0;
-                
+
                 if (element.style.left.includes('calc') || element.style.left.includes('%')) {
-                     const rect = element.getBoundingClientRect();
-                     const parentRect = canvasBoard.getBoundingClientRect();
-                     initialLeft = rect.left - parentRect.left;
-                     initialTop = rect.top - parentRect.top;
-                     element.style.left = `${initialLeft}px`;
-                     element.style.top = `${initialTop}px`;
+                    const rect = element.getBoundingClientRect();
+                    const parentRect = canvasBoard.getBoundingClientRect();
+                    initialLeft = rect.left - parentRect.left;
+                    initialTop = rect.top - parentRect.top;
+                    element.style.left = `${initialLeft}px`;
+                    element.style.top = `${initialTop}px`;
                 }
 
                 if (e.type.includes('touch')) e.preventDefault();
@@ -399,7 +440,7 @@
         // --- 5. The Core Loop: Calculate Vibe ---
         function calculateVibe() {
             const itemCount = canvasBoard.querySelectorAll('.canvas-item:not(.teacher-stamp-container)').length;
-            
+
             if (itemCount < 3) {
                 showToast("Add at least 3 items to calculate your true vibe!");
                 return;
@@ -431,14 +472,14 @@
             const resultData = personas[topTrait];
             document.getElementById('p-title').innerText = resultData.title;
             document.getElementById('p-desc').innerText = resultData.desc;
-            
+
             const banner = document.getElementById('persona-result');
             banner.style.zIndex = zIndexCounter + 10; // Ensure it's always on top
             banner.classList.add('active');
 
             // Optional: Auto-trigger save excitement
             showToast("Vibe calculated! Save and share to the group.");
-            
+
             // Bounce the save button
             exportBtn.classList.add('scale-110', 'bg-emerald-500');
             setTimeout(() => exportBtn.classList.remove('scale-110', 'bg-emerald-500'), 500);
@@ -446,20 +487,20 @@
 
         // --- 6. Utilities ---
         let currentStampIndex = 0;
-        
+
         function addStamp() {
             if (canvasBoard.children.length === 0) emptyState.style.display = 'none';
-            
+
             const existingStamp = document.querySelector('.teacher-stamp-container');
             if (existingStamp) existingStamp.remove();
 
             const stampContainer = document.createElement('div');
             stampContainer.className = 'canvas-item teacher-stamp-container';
-            const rot = (Math.random() * 20) - 30; 
+            const rot = (Math.random() * 20) - 30;
             stampContainer.style.transform = `rotate(${rot}deg)`;
             stampContainer.dataset.baseRotation = rot;
             stampContainer.innerHTML = `<div class="teacher-stamp">${stamps[currentStampIndex]}</div>`;
-            
+
             currentStampIndex = (currentStampIndex + 1) % stamps.length;
             stampContainer.style.left = '5%';
             stampContainer.style.top = '75%';
@@ -508,8 +549,8 @@
 
             try {
                 const canvas = await html2canvas(captureArea, {
-                    scale: 2, 
-                    backgroundColor: null, 
+                    scale: 2,
+                    backgroundColor: null,
                     logging: false
                 });
 
@@ -518,7 +559,7 @@
                 link.download = 'My_NNPS_Vibe.png';
                 link.href = image;
                 link.click();
-                
+
                 showToast("Image Saved! Paste it in the group chat.");
             } catch (err) {
                 console.error("Export failed:", err);
@@ -531,4 +572,5 @@
         }
     </script>
 </body>
+
 </html>
